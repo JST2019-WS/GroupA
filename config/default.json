@@ -6,5 +6,8 @@
     "default": 10,
     "max": 50
   },
-  "mongodb": "mongodb://localhost:27017/wso_backend"
+  "mongodb": {
+    "url": "mongodb+srv://testUser:testpw@cluster0-zbjda.mongodb.net/test?retryWrites=true&w=majority",
+    "dbname": "javascriptDB"
+  }
 }
