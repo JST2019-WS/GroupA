@@ -9,5 +9,6 @@
   "mongodb": {
     "url": "mongodb+srv://testUser:testpw@cluster0-zbjda.mongodb.net/test?retryWrites=true&w=majority",
     "dbname": "javascriptDB"
-  }
+  },
+  "wsoIdentification" : "a383o814kf9as6epb"
 }
