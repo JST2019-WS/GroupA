@@ -1,4 +1,6 @@
 const addUserValidation = require('./hooks/addUserValidation');
+const removeUserValidation = require('./hooks/removeUserValidation');
+const removeUserConfirmation = require('./hooks/removeUserConfirmation');
 
 module.exports = {
   before: {
@@ -8,7 +10,7 @@ module.exports = {
     create: [addUserValidation()],
     update: [],
     patch: [],
-    remove: []
+    remove: [removeUserValidation()]
   },
 
   after: {
@@ -18,7 +20,7 @@ module.exports = {
     create: [],
     update: [],
     patch: [],
-    remove: []
+    remove: [removeUserConfirmation()]
   },
 
   error: {
