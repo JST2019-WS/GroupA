@@ -14,7 +14,7 @@ module.exports = (options = {}) => {
       return Promise.reject(badRequest);
     }
     if (!data.user.id) {
-      const badRequest = new BadRequest('UserID field is missing');
+      const badRequest = new BadRequest('UserID Missing');
       return Promise.reject(badRequest);
     }
 
@@ -23,9 +23,16 @@ module.exports = (options = {}) => {
       data.portfolios = [];
     }
     const portfolioLength = data.portfolios.length;
-    for (let i =0; i< portfolioLength; i++) {
+    for (let i = 0; i < portfolioLength; i++) {
       if (!data.portfolios[i].assets) {
         data.portfolios[i].assets = [];
+      } else {
+        const assets = data.portfolios[i].assets;
+        const assetLength = assets.length;
+
+        for (let j = 0; j < assetLength; j++) {
+          assets[j].created_at = new Date();
+        }
       }
     }
 
@@ -35,7 +42,7 @@ module.exports = (options = {}) => {
       userID = '0' + userID;
     }
     data._id = new ObjectID(userID);
-
+    data.created_at = new Date();
     return context;
   };
 };
