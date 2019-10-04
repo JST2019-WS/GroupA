@@ -10,7 +10,6 @@ const configuration = require('@feathersjs/configuration');
 const express = require('@feathersjs/express');
 
 
-
 const middleware = require('./middleware');
 const services = require('./services');
 const appHooks = require('./app.hooks');
@@ -27,7 +26,7 @@ app.use(helmet());
 app.use(cors());
 app.use(compress());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}));
 
 // Do not host the public folder - pure REST API
 // app.use('/', express.static(app.get('public')));
@@ -48,8 +47,10 @@ app.configure(channels);
 
 // Configure a middleware for 404s and the error handler
 app.use(express.notFound());
-app.use(express.errorHandler({ logger }));
+app.use(express.errorHandler({logger}));
 
 app.hooks(appHooks);
 
 module.exports = app;
+
+//require('./readFile');
