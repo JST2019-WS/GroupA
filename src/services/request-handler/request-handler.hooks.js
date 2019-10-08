@@ -1,11 +1,9 @@
-const handleRequest = require('./hooks/handleRequest')
-
 module.exports = {
   before: {
     all: [],
     find: [],
     get: [],
-    create: [handleRequest()],
+    create: [],
     update: [],
     patch: [],
     remove: []

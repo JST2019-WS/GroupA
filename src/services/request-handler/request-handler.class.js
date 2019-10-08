@@ -1,4 +1,6 @@
 /* eslint-disable no-unused-vars */
+const handleRequest = require('./hooks/handleRequest');
+
 class Service {
   constructor (options) {
     this.options = options || {};
@@ -14,12 +16,12 @@ class Service {
     });
   }
 
-  create (data, params) {
+  async create (data, params) {
     if (Array.isArray(data)) {
       return Promise.all(data.map(current => this.create(current)));
     }
 
-    return Promise.resolve(data);
+    return handleRequest(data, params);
   }
 
   update (id, data, params) {

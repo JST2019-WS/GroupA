@@ -5,7 +5,7 @@ exports.Wso = class Wso extends Service {
     super(options);
     
     app.get('mongoClient').then(db => {
-      this.Model = db.collection('wso');
+      this.Model = db.collection('user-portfolio');
     });
   }
 };
