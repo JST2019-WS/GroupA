@@ -10,8 +10,8 @@ module.exports = function (app) {
       return client;
     }
 
-    const dbName = parse(config, () => {});
-    return client.db(dbName);
+        console.log('Database connected to ' + config.dbname);
+    return client.db(config.dbname);
   }).catch(error => {
     logger.error(error);
   });
