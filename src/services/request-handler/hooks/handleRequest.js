@@ -25,11 +25,6 @@ function idIsNan() {
   return Promise.reject(badRequest);
 }
 
-function portfolioAlreadyExists() {
-  const badRequest = new BadRequest('User already has portfolio with that ID');
-  return Promise.reject(badRequest);
-}
-
 function noPortfolio() {
   const badRequest = new BadRequest('No portfolio specified');
   return Promise.reject(badRequest);
@@ -101,20 +96,31 @@ module.exports =
       return Promise.reject(badRequest);
     }
 
-    //check general requirements(for all actions)
-    if (!data.user)
-      return noUser();
-    if (!data.user.id)
-      return noId();
-    if (isNaN(data.user.id)) //case ignores submissions like 1e10000
-      return idIsNan();
+
+    //check general requirements(for all actions) and define mongoUserID
+    let mongoUserID = '';
+    if(data.user){
+      if(!data.user.id)
+        return noId();
+      if (isNaN(data.user.id))//case ignores submissions like 1e10000
+        return idIsNan();
+
+      mongoUserID = createUserID(data.user.id); //mongoDB id used to identify user
+    }
+    else{
+      if(!data.userId)
+        return noId();
+      if (isNaN(data.userId))//case ignores submissions like 1e10000
+        return idIsNan();
+
+      mongoUserID = createUserID(data.userId); //mongoDB id used to identify user
+    }
 
     const action = data.action;
     delete data.action; //remove data.action Field
 
     const app = require('../../../app');
     const dbService = app.service('wso');// TODO: changeDBService
-    const mongoUserID = createUserID(data.user.id); //mongoDB id used to identify user
 
     switch (action) {
     case 'createUser': {
@@ -128,7 +134,7 @@ module.exports =
     }
     case 'updateUser': {
 
-      delete data.user.id;
+      delete data.userId;
       let result = noUpdates();
       const entries = Object.entries(data.user);
 
@@ -155,7 +161,9 @@ module.exports =
       const validation = await Promise.resolve(dbService.get(mongoUserID, null));
       const result = await Promise.resolve(dbService.patch(mongoUserID, update, null));
       if(result.portfolios.length == validation.portfolios.length){
-        return portfolioAlreadyExists();
+        const badRequest = new BadRequest('User already has portfolio with that ID');
+        badRequest.errors.userPortfolio = result;
+        return Promise.reject(badRequest);
       }
       else {
         return result;
@@ -168,10 +176,18 @@ module.exports =
       if (isNaN(data.portfolioId))
         return portfIdIsNan;
 
-      //TODO
-      //call remove portfolio from wso portfolio service
+      const update = {$pull: {'portfolios' : { 'id' : data.portfolioId}}};
+      const validation = await Promise.resolve(dbService.get(mongoUserID, null));
+      const result = await Promise.resolve(dbService.patch(mongoUserID, update, null));
+      if(result.portfolios.length == validation.portfolios.length){
+        const badRequest = new BadRequest('User did not have portfolio with that ID');
+        badRequest.errors.userPortfolio = result;
+        return Promise.reject(badRequest);
+      }
+      else {
+        return result;
+      }
 
-      break;
 
     case 'addPortfolioAsset':
 
