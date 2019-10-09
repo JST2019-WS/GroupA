@@ -15,7 +15,7 @@ function noId() {
   return Promise.reject(badRequest);
 }
 
-function noUpdates(){
+function noUpdates() {
   const badRequest = new BadRequest('No user updates in data found');
   return Promise.reject(badRequest);
 }
@@ -99,16 +99,15 @@ module.exports =
 
     //check general requirements(for all actions) and define mongoUserID
     let mongoUserID = '';
-    if(data.user){
-      if(!data.user.id)
+    if (data.user) {
+      if (!data.user.id)
         return noId();
       if (isNaN(data.user.id))//case ignores submissions like 1e10000
         return idIsNan();
 
       mongoUserID = createUserID(data.user.id); //mongoDB id used to identify user
-    }
-    else{
-      if(!data.userId)
+    } else {
+      if (!data.userId)
         return noId();
       if (isNaN(data.userId))//case ignores submissions like 1e10000
         return idIsNan();
@@ -157,40 +156,39 @@ module.exports =
       if (!data.portfolio.name)
         return noPortfName();
 
-      const update = {$addToSet: {'portfolios' : data.portfolio}};
+      const update = {$addToSet: {'portfolios': data.portfolio}};
       const validation = await Promise.resolve(dbService.get(mongoUserID, null));
-      const result = await Promise.resolve(dbService.patch(mongoUserID, update, null));
-      if(result.portfolios.length == validation.portfolios.length){
-        const badRequest = new BadRequest('User already has portfolio with that ID');
-        badRequest.errors.userPortfolio = result;
-        return Promise.reject(badRequest);
-      }
-      else {
-        return result;
-      }
 
+      //Test for duplicate portfolioIds
+      for (let portfolio in validation.portfolios) {
+        if (portfolio.id == data.portfolio.id) {
+          const badRequest = new BadRequest('User already has portfolio with that ID');
+          badRequest.errors.userPortfolio = validation;
+          return Promise.reject(badRequest);
+        }
+      }
+      return Promise.resolve(dbService.patch(mongoUserID, update, null));
     }
-    case 'removePortfolio':
+    case 'removePortfolio': {
       if (!data.portfolioId)
         return noPortfolioId();
       if (isNaN(data.portfolioId))
         return portfIdIsNan;
 
-      const update = {$pull: {'portfolios' : { 'id' : data.portfolioId}}};
+      const update = {$pull: {'portfolios': {'id': data.portfolioId}}};
       const validation = await Promise.resolve(dbService.get(mongoUserID, null));
       const result = await Promise.resolve(dbService.patch(mongoUserID, update, null));
-      if(result.portfolios.length == validation.portfolios.length){
+      //test if an entry was removed
+      if (!validation.portfolios || validation.portfolios.length == result.portfolios.length) {
         const badRequest = new BadRequest('User did not have portfolio with that ID');
         badRequest.errors.userPortfolio = result;
         return Promise.reject(badRequest);
-      }
-      else {
+      } else {
         return result;
       }
+    }
 
-
-    case 'addPortfolioAsset':
-
+    case 'addPortfolioAsset': {
       if (!data.portfolioId)
         return noPortfolioId;
       if (isNaN(data.portfolioId))
@@ -200,13 +198,29 @@ module.exports =
       if (!checkAsset(data.asset))
         return assetFormat();
 
-      //TODO
-      //call add portfolio asset from wso portfolio service
+      const params = {};
+      params.query = {'portfolios.id': data.portfolioId};
+      const update = {$addToSet: {'portfolios.$.assets': data.asset}};
+      const validation = await Promise.resolve(dbService.get(mongoUserID, null));
 
-      break;
+      const validationPortfolio = await validation.portfolios.find(
+        (portfolio) => {
+          return portfolio.id == data.portfolioId;
+        });
 
-    case 'removePortfolioAsset':
-
+      //test for duplicate assetIDs in the portfolio
+      if (validationPortfolio.assets) {
+        for (let i = 0; i < validationPortfolio.assets.length; i++) {
+          if (validationPortfolio.assets[i].instrumentId == data.asset.instrumentId) {
+            const badRequest = new BadRequest('Portfolio of User has already an Asset with that ID');
+            badRequest.errors.userPortfolio = validation;
+            return Promise.reject(badRequest);
+          }
+        }
+      }
+      return Promise.resolve(dbService.patch(mongoUserID, update, params));
+    }
+    case 'removePortfolioAsset': {
       if (!data.portfolioId)
         return noPortfolioId();
       if (isNaN(data.portfolioId))
@@ -216,11 +230,30 @@ module.exports =
       if (isNaN(data.assetId))
         return assetIdIsNan();
 
-      //TODO
-      //call remove portfolio asset from wso portfolio service
+      const params = {};
+      params.query = {'portfolios.id': data.portfolioId};
+      const update = {$pull: {'portfolios.$.assets': {'instrumentId': data.assetId}}};
+      const validation = await Promise.resolve(dbService.get(mongoUserID, null));
+      const result = await Promise.resolve(dbService.patch(mongoUserID, update, params));
+      const validationPortfolio = await validation.portfolios.find(
+        (portfolio) => {
+          return portfolio.id == data.portfolioId;
+        });
 
-      break;
+      const resultPortfolio = await result.portfolios.find(
+        (portfolio) => {
+          return portfolio.id == data.portfolioId;
+        });
 
+      //test if an asset was removed
+      if (!validationPortfolio.assets || validationPortfolio.assets.length == resultPortfolio.assets.length) {
+        const badRequest = new BadRequest('User-Portfolio did not have Asset with that ID');
+        badRequest.errors.userPortfolio = result;
+        return Promise.reject(badRequest);
+      } else {
+        return result;
+      }
+    }
     case 'generateRecommendations':
 
       if (!data.portfolioId)
