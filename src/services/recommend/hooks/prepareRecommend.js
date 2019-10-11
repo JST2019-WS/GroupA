@@ -1,24 +1,14 @@
 /*eslint-disable no-unused-vars, no-case-declarations*/
 
-const ObjectID = require('mongodb').ObjectID;
 const {NotFound, GeneralError, BadRequest} = require('@feathersjs/errors');
-
-function createUserID(userID) {
-  if (userID.length >= 12)
-    userID = userID.substring(0, 11);
-  for (let i = userID.length; i < 12; i++) {
-    userID = '0' + userID;
-  }
-  // return new ObjectID(userID); //for some reason this has 3s as filler
-  return userID;
-}
+const createMongoID = require('../../../helper/createMongoID');
 
 module.exports = 
   async (raw_id, params) => {
     //console.log(params.query.portfolio) //this is the portfolio
     // console.log(data) //data is the id
     //validate
-    const id = createUserID(raw_id);
+    const id = createMongoID.createUserID(raw_id);
 
     // console.log(id)
     if(!params.query.portfolio){

@@ -1,8 +1,7 @@
 /*eslint-disable no-unused-vars, no-case-declarations*/
 //require statement to WSO / User portfolio service here
 const {NotFound, GeneralError, BadRequest} = require('@feathersjs/errors');
-const ObjectID = require('mongodb').ObjectID;
-
+const createMongoID = require('../../../helper/createMongoID');
 
 //Helper Methods
 function noUser() {
@@ -78,15 +77,6 @@ function checkAsset(asset) {
 
 }
 
-function createUserID(userID) {
-  if (userID.length >= 12)
-    userID = userID.substring(0, 11);
-  for (let i = userID.length; i < 12; i++) {
-    userID = '0' + userID;
-  }
-  return new ObjectID(userID);
-}
-
 module.exports =
   async (data, params) => {
 
@@ -105,14 +95,14 @@ module.exports =
       if (isNaN(data.user.id))//case ignores submissions like 1e10000
         return idIsNan();
 
-      mongoUserID = createUserID(data.user.id); //mongoDB id used to identify user
+      mongoUserID = createMongoID.createUserID(data.user.id); //mongoDB id used to identify user
     } else {
       if (!data.userId)
         return noId();
       if (isNaN(data.userId))//case ignores submissions like 1e10000
         return idIsNan();
 
-      mongoUserID = createUserID(data.userId); //mongoDB id used to identify user
+      mongoUserID = createMongoID.createUserID(data.userId); //mongoDB id used to identify user
     }
 
     const action = data.action;
@@ -254,22 +244,9 @@ module.exports =
         return result;
       }
     }
-    case 'generateRecommendations':
-
-      if (!data.portfolioId)
-        return noPortfolioId();
-      if (isNaN(data.portfolioId))
-        return portfIdIsNan();
-
-      //TODO
-      //initiate the recommendation proccess here
-
-      break;
 
     default:
       const badRequest = new BadRequest('Unknown action');
       return Promise.reject(badRequest);
     }
-
-    return context;
   };
