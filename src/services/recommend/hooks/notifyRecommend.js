@@ -124,7 +124,7 @@ module.exports =
     }
 
     const app = require('../../../app');
-    const dbService = app.service('wso'); //change this to portfolio service
+    const dbService = app.service('user-portfolioDB'); //change this to portfolio service
 
     //replace this with a method from the portfolio services
     //if the user is found, add the choice to his list of choices, return message:

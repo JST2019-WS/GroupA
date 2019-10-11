@@ -1,6 +1,6 @@
 const { Service } = require('feathers-mongodb');
 
-exports.Wso = class Wso extends Service {
+exports.UserPortfolioDB = class UserPortfolioDB extends Service {
   constructor(options, app) {
     super(options);
     

@@ -119,7 +119,7 @@ module.exports =
     delete data.action; //remove data.action Field
 
     const app = require('../../../app');
-    const dbService = app.service('wso');// TODO: changeDBService
+    const dbService = app.service('user-portfolioDB');
 
     switch (action) {
     case 'createUser': {
