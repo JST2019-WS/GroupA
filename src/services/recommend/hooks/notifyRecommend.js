@@ -126,8 +126,9 @@ module.exports =
   	const dbService = app.service('wso'); //change this to portfolio service
 
   	//replace this with a method from the portfolio services
-  	//if the user is found, add the choice to his list of choices, return message string.
-  	//if user is not found, return {user} not found
+  	//if the user is found, add the choice to his list of choices, return message:
+  	//{user} selection ({stock.name}: {stock.id}) acknowledged
+  	//if user is not found, return: {user} not found
   	result = null //TODO here
   	return result
 
