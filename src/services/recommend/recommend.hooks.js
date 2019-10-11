@@ -1,10 +1,9 @@
-const prepareRecommend = require('./hooks/prepareRecommend')
+
 
 module.exports = {
   before: {
     all: [],
     find: [],
-    // get: [prepareRecommend()],
     get: [],
     create: [],
     update: [],
