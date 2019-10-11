@@ -3,6 +3,8 @@ const wso = require('./wso/wso.service.js');
 const userData = require('./user-data/user-data.service.js');
 const statistics = require('./statistics/statistics.service.js');
 const requestHandler = require('./request-handler/request-handler.service.js');
+const recommend = require('./recommend/recommend.service.js');
+
 // eslint-disable-next-line no-unused-vars
 module.exports = function (app) {
   app.configure(monitoring);
@@ -10,4 +12,5 @@ module.exports = function (app) {
   app.configure(userData);
   app.configure(statistics);
   app.configure(requestHandler);
+  app.configure(recommend);
 };
