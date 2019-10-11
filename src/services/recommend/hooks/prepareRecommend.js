@@ -3,7 +3,7 @@
 const {NotFound, GeneralError, BadRequest} = require('@feathersjs/errors');
 const createMongoID = require('../../../helper/createMongoID');
 
-module.exports = 
+module.exports =
   async (raw_id, params) => {
     //console.log(params.query.portfolio) //this is the portfolio
     // console.log(data) //data is the id
@@ -11,14 +11,14 @@ module.exports =
     const id = createMongoID.createUserID(raw_id);
 
     // console.log(id)
-    if(!params.query.portfolio){
+    if (!params.query.portfolio) {
       const badRequest = new BadRequest('No portfolio specified');
       return Promise.reject(badRequest);
     }
 
     const portfolio = params.query.portfolio;
 
-    if(isNaN(portfolio)){
+    if (isNaN(portfolio)) {
       const badRequest = new BadRequest('Illegal portfolio id');
       return Promise.reject(badRequest);
     }
@@ -40,7 +40,7 @@ module.exports =
     dummy.category.name = 'Banken';
     dummy.category.url = 'https://www.wallstreet-online.de/aktien/branche/banken-aktien';
     dummy.value = 5.249;
-    dummy. absolute = -0.066;
+    dummy.absolute = -0.066;
     dummy.relative = -1.24;
     dummy.updated_at = '2019-09-27T08:00:00Z';
     dummy.currency = 'EUR';
