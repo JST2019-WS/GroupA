@@ -9,8 +9,7 @@ function createUserID(userID) {
   for (let i = userID.length; i < 12; i++) {
     userID = '0' + userID;
   }
-  // return new ObjectID(userID); //for some reason this has 3s as filler
-  return userID
+  return new ObjectID(userID); //for some reason this has 3s as filler
 }
 
 module.exports = 
