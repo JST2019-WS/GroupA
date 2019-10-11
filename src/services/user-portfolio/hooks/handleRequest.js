@@ -2,6 +2,7 @@
 //require statement to WSO / User portfolio service here
 const {NotFound, GeneralError, BadRequest} = require('@feathersjs/errors');
 const createMongoID = require('../../../helper/createMongoID');
+const saveMonitoringRecord = require('../../../helper/saveMonitoringRecord');
 
 //Helper Methods
 function noUser() {
@@ -89,28 +90,30 @@ module.exports =
 
     //check general requirements(for all actions) and define mongoUserID
     let mongoUserID = '';
+    let userID = '';
     if (data.user) {
       if (!data.user.id)
         return noId();
       if (isNaN(data.user.id))//case ignores submissions like 1e10000
         return idIsNan();
-
+      userID = data.user.id;
       mongoUserID = createMongoID.createUserID(data.user.id); //mongoDB id used to identify user
     } else {
       if (!data.userId)
         return noId();
       if (isNaN(data.userId))//case ignores submissions like 1e10000
         return idIsNan();
-
+      userID = data.userId;
       mongoUserID = createMongoID.createUserID(data.userId); //mongoDB id used to identify user
     }
-
-    const action = data.action;
-    delete data.action; //remove data.action Field
 
     const app = require('../../../app');
     const dbService = app.service('user-portfolioDB');
 
+    const action = data.action;
+    delete data.action; //remove data.action Field
+
+    const monitoringRecord = {'service': 'userPortfolio', 'action': action};
     switch (action) {
     case 'createUser': {
       if (!data.user.name) {
@@ -119,18 +122,22 @@ module.exports =
       }
       data._id = mongoUserID;
       //Create correct createUserRequest
-      return Promise.resolve(dbService.create(data, null));
+      const result = await dbService.create(data, null);
+      saveMonitoringRecord.saveRecord(monitoringRecord, true, 'Created user-portfolio for user ' + userID);
+      return Promise.resolve(result);
     }
     case 'updateUser': {
-
-      delete data.userId;
-      let result = noUpdates();
+      delete data.user.id;
+      let result = null;
       const entries = Object.entries(data.user);
-
       for (let [key, value] of entries) {
         const fullKey = 'user.' + [key];
         const update = {$set: {[fullKey]: value}};
         result = await Promise.resolve(dbService.patch(mongoUserID, update, null));
+        saveMonitoringRecord.saveRecord(monitoringRecord, true, 'Updated ' + key + ' field of user ' + userID + ' to: ' + value);
+      }
+      if (result == null) {
+        result = noUpdates();
       }
 
       return result;
@@ -148,15 +155,18 @@ module.exports =
 
       const update = {$addToSet: {'portfolios': data.portfolio}};
       const validation = await Promise.resolve(dbService.get(mongoUserID, null));
-
       //Test for duplicate portfolioIds
-      for (let portfolio in validation.portfolios) {
+      for (let portfolio of validation.portfolios) {
         if (portfolio.id == data.portfolio.id) {
           const badRequest = new BadRequest('User already has portfolio with that ID');
           badRequest.errors.userPortfolio = validation;
+
+          const monitoringDesc = 'Tried to add portfolio, but user ' + userID + 'did already have a portfolio with id:' + data.portfolio.id;
+          saveMonitoringRecord.saveRecord(monitoringRecord, false, monitoringDesc);
           return Promise.reject(badRequest);
         }
       }
+      saveMonitoringRecord.saveRecord(monitoringRecord, true, 'Added portfolio ' + data.portfolio.id + ' to user ' + userID);
       return Promise.resolve(dbService.patch(mongoUserID, update, null));
     }
     case 'removePortfolio': {
@@ -172,17 +182,20 @@ module.exports =
       if (!validation.portfolios || validation.portfolios.length == result.portfolios.length) {
         const badRequest = new BadRequest('User did not have portfolio with that ID');
         badRequest.errors.userPortfolio = result;
+        const monitoringDesc = 'Tried to remove portfolio, but user ' + userID + ' did not have portfolio with id: ' + data.portfolioId;
+        saveMonitoringRecord.saveRecord(monitoringRecord, false, monitoringDesc);
         return Promise.reject(badRequest);
       } else {
+        saveMonitoringRecord.saveRecord(monitoringRecord, true, 'Removed portfolio ' + data.portfolioId + ' from user ' + userID);
         return result;
       }
     }
 
     case 'addPortfolioAsset': {
       if (!data.portfolioId)
-        return noPortfolioId;
+        return noPortfolioId();
       if (isNaN(data.portfolioId))
-        return portfIdIsNan;
+        return portfIdIsNan();
       if (!data.asset)
         return noAsset();
       if (!checkAsset(data.asset))
@@ -204,10 +217,14 @@ module.exports =
           if (validationPortfolio.assets[i].instrumentId == data.asset.instrumentId) {
             const badRequest = new BadRequest('Portfolio of User has already an Asset with that ID');
             badRequest.errors.userPortfolio = validation;
+            const monitoringDesc = 'Tried to add asset to portfolio ' + data.portfolioId + ' of user ' + userID + ', but an asset already exists with id: ' + data.asset.instrumentId;
+            saveMonitoringRecord.saveRecord(monitoringRecord, false, monitoringDesc);
             return Promise.reject(badRequest);
           }
         }
       }
+      const monitoringDesc = 'Added asset to portfolio ' + data.portfolioId + ' of user ' + userID + ' with instrumentId: ' + data.asset.instrumentId;
+      saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
       return Promise.resolve(dbService.patch(mongoUserID, update, params));
     }
     case 'removePortfolioAsset': {
@@ -239,8 +256,13 @@ module.exports =
       if (!validationPortfolio.assets || validationPortfolio.assets.length == resultPortfolio.assets.length) {
         const badRequest = new BadRequest('User-Portfolio did not have Asset with that ID');
         badRequest.errors.userPortfolio = result;
+        const monitoringDesc = 'Tried to remove asset from portfolio ' + data.portfolioId + ' of user ' + userID + ', but no asset exists with id: ' + data.assetId;
+        saveMonitoringRecord.saveRecord(monitoringRecord, false, monitoringDesc);
+
         return Promise.reject(badRequest);
       } else {
+        const monitoringDesc = 'Removed asset from portfolio ' + data.portfolioId + ' of user ' + userID + ' with instrumentId: ' + data.assetId;
+        saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
         return result;
       }
     }

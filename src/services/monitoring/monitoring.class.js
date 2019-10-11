@@ -1,36 +1,11 @@
-/* eslint-disable no-unused-vars */
-exports.Monitoring = class Monitoring {
-  constructor (options) {
-    this.options = options || {};
-  }
+const {Service} = require('feathers-mongodb');
 
-  async find (params) {
-    return [];
-  }
+exports.Monitoring = class Monitoring extends Service {
+  constructor(options, app) {
+    super(options);
 
-  async get (id, params) {
-    return {
-      id, text: `A new message with ID: ${id}!`
-    };
+    app.get('mongoClient').then(db => {
+      this.Model = db.collection('monitoring');
+    });
   }
-
-  async create (data, params) {
-    if (Array.isArray(data)) {
-      return Promise.all(data.map(current => this.create(current, params)));
-    }
-
-    return data;
-  }
-
-  async update (id, data, params) {
-    return data;
-  }
-
-  async patch (id, data, params) {
-    return data;
-  }
-
-  async remove (id, params) {
-    return { id };
-  }
-}
+};
