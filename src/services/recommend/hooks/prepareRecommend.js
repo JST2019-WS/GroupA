@@ -2,17 +2,21 @@
 
 const {NotFound, GeneralError, BadRequest} = require('@feathersjs/errors');
 const createMongoID = require('../../../helper/createMongoID');
+const saveMonitoringRecord = require('../../../helper/saveMonitoringRecord');
 
 module.exports =
   async (raw_id, params) => {
     //console.log(params.query.portfolio) //this is the portfolio
     // console.log(data) //data is the id
+
+    const monitoringRecord = {'service': 'recommend', 'action': 'prepareRecommend'};
     //validate
     const id = createMongoID.createUserID(raw_id);
 
     // console.log(id)
     if (!params.query.portfolio) {
       const badRequest = new BadRequest('No portfolio specified');
+      saveMonitoringRecord.saveRecord(monitoringRecord, false, 'No portfolio specified');
       return Promise.reject(badRequest);
     }
 
@@ -20,6 +24,7 @@ module.exports =
 
     if (isNaN(portfolio)) {
       const badRequest = new BadRequest('Illegal portfolio id');
+      saveMonitoringRecord.saveRecord(monitoringRecord, false, 'Illegal portfolio id');
       return Promise.reject(badRequest);
     }
 
@@ -50,6 +55,7 @@ module.exports =
     // console.log(dummy)
 
 
+    saveMonitoringRecord.saveRecord(monitoringRecord, true, '');//ToDo: add description
     // return context
     return dummy;
   };
