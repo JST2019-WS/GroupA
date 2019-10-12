@@ -6,7 +6,9 @@ const saveMonitoringRecord = require('../../../helper/saveMonitoringRecord');
 module.exports =
   async (data, params) => {
     const monitoringRecord = {'service': 'recommend', 'action': 'notifyRecommend'};
+    const app = require('../../../app');
     //validate
+
     if (!data.userId) {
       const badRequest = new BadRequest('UserId missing');
       saveMonitoringRecord.saveRecord(monitoringRecord, false, 'UserId missing');
@@ -134,7 +136,6 @@ module.exports =
       return Promise.reject(badRequest);
     }
 
-    const app = require('../../../app');
     const dbService = app.service('user-portfolioDB'); //change this to portfolio service
 
     //replace this with a method from the portfolio services

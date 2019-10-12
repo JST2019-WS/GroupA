@@ -93,6 +93,16 @@ function checkAsset(asset) {
 module.exports =
   async (data, params) => {
 
+    const app = require('../../../app');
+    const dbService = app.service('user-portfolioDB');
+
+    //catch: request contains correct security key
+    if (!data.securityKey || data.securityKey !== app.get('wsoSecurityKey')) {
+      const badRequest = new BadRequest('Security Key missing or wrong. Key: ' + data.securityKey);
+      saveMonitoringRecord.saveRecord({'service': 'userPortfolio', 'action': (data.action ? data.action : 'none')}, false, 'Security Key missing or wrong. Key: ' + data.securityKey);
+      return Promise.reject(badRequest);
+    }
+
     //catch: request contains no action field
     if (!data.action) {
       const badRequest = new BadRequest('No action specified');
@@ -125,9 +135,7 @@ module.exports =
       mongoUserID = createMongoID.createUserID(data.userId); //mongoDB id used to identify user
     }
 
-    const app = require('../../../app');
-    const dbService = app.service('user-portfolioDB');
-
+    //handle request based on action:
     switch (action) {
     case 'createUser': {
       if (!data.user.name) {
