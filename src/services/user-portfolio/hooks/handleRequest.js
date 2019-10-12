@@ -5,63 +5,75 @@ const createMongoID = require('../../../helper/createMongoID');
 const saveMonitoringRecord = require('../../../helper/saveMonitoringRecord');
 
 //Helper Methods
-function noUser() {
+function noUser(record) {
   const badRequest = new BadRequest('No user specified');
+  saveMonitoringRecord.saveRecord(record, false, 'No user specified');
   return Promise.reject(badRequest);
 }
 
-function noId() {
+function noId(record) {
   const badRequest = new BadRequest('No user id specified');
+  saveMonitoringRecord.saveRecord(record, false, 'No user id specified');
   return Promise.reject(badRequest);
 }
 
-function noUpdates() {
+function noUpdates(record) {
   const badRequest = new BadRequest('No user updates in data found');
+  saveMonitoringRecord.saveRecord(record, false, 'No user updates in data found');
   return Promise.reject(badRequest);
 }
 
-function idIsNan() {
+function idIsNan(record) {
   const badRequest = new BadRequest('User id is not a number');
+  saveMonitoringRecord.saveRecord(record, false, 'User id is not a number');
   return Promise.reject(badRequest);
 }
 
-function noPortfolio() {
+function noPortfolio(record) {
   const badRequest = new BadRequest('No portfolio specified');
+  saveMonitoringRecord.saveRecord(record, false, 'No portfolio specified');
   return Promise.reject(badRequest);
 }
 
-function noPortfolioId() {
+function noPortfolioId(record) {
   const badRequest = new BadRequest('No portfolio id specified');
+  saveMonitoringRecord.saveRecord(record, false, 'No portfolio id specified');
   return Promise.reject(badRequest);
 }
 
-function portfIdIsNan() {
+function portfIdIsNan(record) {
   const badRequest = new BadRequest('Portfolio id is not a number');
+  saveMonitoringRecord.saveRecord(record, false, 'Portfolio id is not a number');
   return Promise.reject(badRequest);
 }
 
-function noPortfName() {
+function noPortfName(record) {
   const badRequest = new BadRequest('Portfolio name not specified');
+  saveMonitoringRecord.saveRecord(record, false, 'Portfolio name not specified');
   return Promise.reject(badRequest);
 }
 
-function noAsset() {
+function noAsset(record) {
   const badRequest = new BadRequest('Asset not specified');
+  saveMonitoringRecord.saveRecord(record, false, 'Asset not specified');
   return Promise.reject(badRequest);
 }
 
-function assetFormat() {
+function assetFormat(record) {
   const badRequest = new BadRequest('Asset not formatted correctly');
+  saveMonitoringRecord.saveRecord(record, false, 'Asset not formatted correctly');
   return Promise.reject(badRequest);
 }
 
-function noAssetId() {
+function noAssetId(record) {
   const badRequest = new BadRequest('Asset id not specified');
+  saveMonitoringRecord.saveRecord(record, false, 'Asset id not specified');
   return Promise.reject(badRequest);
 }
 
-function assetIdIsNan() {
+function assetIdIsNan(record) {
   const badRequest = new BadRequest('Asset id is not a number');
+  saveMonitoringRecord.saveRecord(record, false, 'Asset id is not a number');
   return Promise.reject(badRequest);
 }
 
@@ -84,25 +96,31 @@ module.exports =
     //catch: request contains no action field
     if (!data.action) {
       const badRequest = new BadRequest('No action specified');
+      saveMonitoringRecord.saveRecord({'service': 'userPortfolio', 'action': 'none'}, false, 'No action field!');
       return Promise.reject(badRequest);
     }
 
+
+    const action = data.action;
+    delete data.action; //remove data.action Field
+
+    const monitoringRecord = {'service': 'userPortfolio', 'action': action};
 
     //check general requirements(for all actions) and define mongoUserID
     let mongoUserID = '';
     let userID = '';
     if (data.user) {
       if (!data.user.id)
-        return noId();
+        return noId(monitoringRecord);
       if (isNaN(data.user.id))//case ignores submissions like 1e10000
-        return idIsNan();
+        return idIsNan(monitoringRecord);
       userID = data.user.id;
       mongoUserID = createMongoID.createUserID(data.user.id); //mongoDB id used to identify user
     } else {
       if (!data.userId)
-        return noId();
+        return noId(monitoringRecord);
       if (isNaN(data.userId))//case ignores submissions like 1e10000
-        return idIsNan();
+        return idIsNan(monitoringRecord);
       userID = data.userId;
       mongoUserID = createMongoID.createUserID(data.userId); //mongoDB id used to identify user
     }
@@ -110,14 +128,11 @@ module.exports =
     const app = require('../../../app');
     const dbService = app.service('user-portfolioDB');
 
-    const action = data.action;
-    delete data.action; //remove data.action Field
-
-    const monitoringRecord = {'service': 'userPortfolio', 'action': action};
     switch (action) {
     case 'createUser': {
       if (!data.user.name) {
         const badRequest = new BadRequest('No user name specified');
+        saveMonitoringRecord.saveRecord(monitoringRecord, false, 'No user name specified');
         return Promise.reject(badRequest);
       }
       data._id = mongoUserID;
@@ -137,7 +152,7 @@ module.exports =
         saveMonitoringRecord.saveRecord(monitoringRecord, true, 'Updated ' + key + ' field of user ' + userID + ' to: ' + value);
       }
       if (result == null) {
-        result = noUpdates();
+        result = noUpdates(monitoringRecord);
       }
 
       return result;
@@ -145,13 +160,13 @@ module.exports =
     case 'addPortfolio': {
 
       if (!data.portfolio)
-        return noPortfolio();
+        return noPortfolio(monitoringRecord);
       if (!data.portfolio.id)
-        return noPortfolioId();
+        return noPortfolioId(monitoringRecord);
       if (isNaN(data.portfolio.id))
-        return portfIdIsNan();
+        return portfIdIsNan(monitoringRecord);
       if (!data.portfolio.name)
-        return noPortfName();
+        return noPortfName(monitoringRecord);
 
       const update = {$addToSet: {'portfolios': data.portfolio}};
       const validation = await Promise.resolve(dbService.get(mongoUserID, null));
@@ -171,9 +186,9 @@ module.exports =
     }
     case 'removePortfolio': {
       if (!data.portfolioId)
-        return noPortfolioId();
+        return noPortfolioId(monitoringRecord);
       if (isNaN(data.portfolioId))
-        return portfIdIsNan;
+        return portfIdIsNan(monitoringRecord);
 
       const update = {$pull: {'portfolios': {'id': data.portfolioId}}};
       const validation = await Promise.resolve(dbService.get(mongoUserID, null));
@@ -193,13 +208,13 @@ module.exports =
 
     case 'addPortfolioAsset': {
       if (!data.portfolioId)
-        return noPortfolioId();
+        return noPortfolioId(monitoringRecord);
       if (isNaN(data.portfolioId))
-        return portfIdIsNan();
+        return portfIdIsNan(monitoringRecord);
       if (!data.asset)
-        return noAsset();
+        return noAsset(monitoringRecord);
       if (!checkAsset(data.asset))
-        return assetFormat();
+        return assetFormat(monitoringRecord);
 
       const params = {};
       params.query = {'portfolios.id': data.portfolioId};
@@ -229,13 +244,13 @@ module.exports =
     }
     case 'removePortfolioAsset': {
       if (!data.portfolioId)
-        return noPortfolioId();
+        return noPortfolioId(monitoringRecord);
       if (isNaN(data.portfolioId))
-        return portfIdIsNan();
+        return portfIdIsNan(monitoringRecord);
       if (!data.assetId)
-        return noAssetId();
+        return noAssetId(monitoringRecord);
       if (isNaN(data.assetId))
-        return assetIdIsNan();
+        return assetIdIsNan(monitoringRecord);
 
       const params = {};
       params.query = {'portfolios.id': data.portfolioId};
@@ -269,6 +284,7 @@ module.exports =
 
     default:
       const badRequest = new BadRequest('Unknown action');
+      saveMonitoringRecord.saveRecord(monitoringRecord, false, 'Unknown action!');
       return Promise.reject(badRequest);
     }
   };
