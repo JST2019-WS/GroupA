@@ -284,7 +284,7 @@ module.exports =
       //reset recommend of that portfolio
       const interParams = {};
       interParams.query = {'portfolios.id': data.portfolioId};
-      const interUpdate = {$set: {'recommend': new Array()}};
+      const interUpdate = {$set: {'portfolios.$.recommend': new Array()}};
       const resetRecommend = await Promise.resolve(dbService.patch(mongoUserID, interUpdate, interParams))
 
       const monitoringDesc = 'Added asset to portfolio ' + data.portfolioId + ' of user ' + userID + ' with instrumentId: ' + data.asset.instrumentId;
@@ -330,7 +330,7 @@ module.exports =
         //reset recommend of that portfolio
         const interParams = {};
         interParams.query = {'portfolios.id': data.portfolioId};
-        const interUpdate = {$set: {'recommend': new Array()}};
+        const interUpdate = {$set: {'portfolios.$.recommend': new Array()}};
         const resetRecommend = await Promise.resolve(dbService.patch(mongoUserID, interUpdate, interParams))
 
         const monitoringDesc = 'Removed asset from portfolio ' + data.portfolioId + ' of user ' + userID + ' with instrumentId: ' + data.assetId;
@@ -349,7 +349,7 @@ module.exports =
       
       const params = {};
       params.query = {'portfolios.id': data.portfolioId};
-      const update = {$set: {'recommend': new Array()}};
+      const update = {$set: {'portfolios.$.recommend': new Array()}};
       
       //missing validations?
       const result = await Promise.resolve(dbService.patch(mongoUserID, update, params));
@@ -374,7 +374,7 @@ module.exports =
 
       const params = {};
       params.query = {'portfolios.id': data.portfolioId};
-      const update = {$push: {'recommend': data.value}}
+      const update = {$push: {'portfolios.$.recommend': data.value}}
 
       //missing validations?
       const result = await Promise.resolve(dbService.patch(mongoUserID, update, params))
@@ -392,13 +392,13 @@ module.exports =
       if (isNaN(data.portfolioId))
         return portfIdIsNan(monitoringRecord);
       if(!data.values)
-        return noValue(monitoringRecord);
+        return noValues(monitoringRecord);
       //check if all values of the array are int?
 
 
       const params = {};
       params.query = {'portfolios.id': data.portfolioId};
-      const update = {$set: {'recommend': data.values}};
+      const update = {$set: {'portfolios.$.recommend': data.values}};
 
       //missing validations?
       const result = await Promise.resolve(dbService.patch(mongoUserID, update, params))
@@ -407,6 +407,11 @@ module.exports =
       saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
       return result;
 
+    }
+
+    //returns user
+    case 'getUser':{
+      return await Promise.resolve(dbService.get(mongoUserID,null))
     }
 
     default:
