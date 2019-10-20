@@ -90,6 +90,30 @@ function checkAsset(asset) {
 
 }
 
+//new check methods for the value to be pushed to a portfolio's recommend array
+function noValue(record) {
+  const badRequest = new BadRequest('No value specified');
+  saveMonitoringRecord.saveRecord(record, false, 'No value specified');
+  return Promise.reject(badRequest);
+}
+
+function valueIsNan(record) {
+  const badRequest = new BadRequest('Value is not a number');
+  saveMonitoringRecord.saveRecord(record, false, 'Value is not a number');
+  return Promise.reject(badRequest); 
+}
+
+function noValues(record) {
+  const badRequest = new BadRequest('No array of values specified');
+  saveMonitoringRecord.saveRecord(record, false, 'No array of values specified');
+  return Promise.reject(badRequest);
+}
+
+//Helper: adds recommend (int[]) / resets it to a portfolio
+function setRecommend(portfolio){
+  portfolio.recommend = new Array();
+}
+
 module.exports =
   async (data, params) => {
 
@@ -181,6 +205,9 @@ module.exports =
       if (!data.portfolio.name)
         return noPortfName(monitoringRecord);
 
+      //sets the recommend array for the portfolio
+      setRecommend(data.portfolio)
+
       const update = {$addToSet: {'portfolios': data.portfolio}};
       const validation = await Promise.resolve(dbService.get(mongoUserID, null));
       //Test for duplicate portfolioIds
@@ -253,10 +280,18 @@ module.exports =
           }
         }
       }
+
+      //reset recommend of that portfolio
+      const interParams = {};
+      interParams.query = {'portfolios.id': data.portfolioId};
+      const interUpdate = {$set: {'recommend': new Array()}};
+      const resetRecommend = await Promise.resolve(dbService.patch(mongoUserID, interUpdate, interParams))
+
       const monitoringDesc = 'Added asset to portfolio ' + data.portfolioId + ' of user ' + userID + ' with instrumentId: ' + data.asset.instrumentId;
       saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
       return Promise.resolve(dbService.patch(mongoUserID, update, params));
     }
+
     case 'removePortfolioAsset': {
       if (!data.portfolioId)
         return noPortfolioId(monitoringRecord);
@@ -291,10 +326,87 @@ module.exports =
 
         return Promise.reject(badRequest);
       } else {
+
+        //reset recommend of that portfolio
+        const interParams = {};
+        interParams.query = {'portfolios.id': data.portfolioId};
+        const interUpdate = {$set: {'recommend': new Array()}};
+        const resetRecommend = await Promise.resolve(dbService.patch(mongoUserID, interUpdate, interParams))
+
         const monitoringDesc = 'Removed asset from portfolio ' + data.portfolioId + ' of user ' + userID + ' with instrumentId: ' + data.assetId;
         saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
         return result;
       }
+    }
+
+    case'resetPortfolioRecommend': {
+      
+      if (!data.portfolioId)
+        return noPortfolioId(monitoringRecord);
+      if (isNaN(data.portfolioId))
+        return portfIdIsNan(monitoringRecord);
+
+      
+      const params = {};
+      params.query = {'portfolios.id': data.portfolioId};
+      const update = {$set: {'recommend': new Array()}};
+      
+      //missing validations?
+      const result = await Promise.resolve(dbService.patch(mongoUserID, update, params));
+
+      const monitoringDesc = 'Reset recommend of Portfolio ' + data.portfolioId + ' of user ' + userID;
+      saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
+      return result;
+
+    }
+
+    case'pushPortfolioRecommend':{
+
+      if (!data.portfolioId)
+        return noPortfolioId(monitoringRecord);
+      if (isNaN(data.portfolioId))
+        return portfIdIsNan(monitoringRecord);
+      if(!data.value)
+        return noValue(monitoringRecord);
+      if(isNaN(data.value))
+        return valueIsNan(monitoringRecord);
+
+
+      const params = {};
+      params.query = {'portfolios.id': data.portfolioId};
+      const update = {$push: {'recommend': data.value}}
+
+      //missing validations?
+      const result = await Promise.resolve(dbService.patch(mongoUserID, update, params))
+
+      const monitoringDesc = 'Pushed ' + data.value + ' to recommend of Portfolio ' + data.portfolioId + ' of user ' + userID;
+      saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
+      return result;
+
+    }
+
+    case'setPortfolioRecommend':{
+
+      if (!data.portfolioId)
+        return noPortfolioId(monitoringRecord);
+      if (isNaN(data.portfolioId))
+        return portfIdIsNan(monitoringRecord);
+      if(!data.values)
+        return noValue(monitoringRecord);
+      //check if all values of the array are int?
+
+
+      const params = {};
+      params.query = {'portfolios.id': data.portfolioId};
+      const update = {$set: {'recommend': data.values}};
+
+      //missing validations?
+      const result = await Promise.resolve(dbService.patch(mongoUserID, update, params))
+
+      const monitoringDesc = 'Set recommend of Portfolio ' + data.portfolioId + ' to ' + data.values + ' of user ' + userID;
+      saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
+      return result;
+
     }
 
     default:
