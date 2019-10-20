@@ -102,7 +102,7 @@ module.exports =
       saveMonitoringRecord.saveRecord({'service': 'userPortfolio', 'action': (data.action ? data.action : 'none')}, false, 'Security Key missing or wrong. Key: ' + data.securityKey);
       return Promise.reject(badRequest);
     }
-
+    delete data.securityKey;
     //catch: request contains no action field
     if (!data.action) {
       const badRequest = new BadRequest('No action specified');
@@ -147,6 +147,11 @@ module.exports =
       //Create correct createUserRequest
       const result = await dbService.create(data, null);
       saveMonitoringRecord.saveRecord(monitoringRecord, true, 'Created user-portfolio for user ' + userID);
+      return Promise.resolve(result);
+    }
+    case 'removeUser': {
+      const result = await dbService.remove(mongoUserID, null);
+      saveMonitoringRecord.saveRecord(monitoringRecord, true, 'Removed user-portfolio of user ' + userID);
       return Promise.resolve(result);
     }
     case 'updateUser': {
