@@ -184,14 +184,16 @@ module.exports =
       const update = {$addToSet: {'portfolios': data.portfolio}};
       const validation = await Promise.resolve(dbService.get(mongoUserID, null));
       //Test for duplicate portfolioIds
-      for (let portfolio of validation.portfolios) {
-        if (portfolio.id == data.portfolio.id) {
-          const badRequest = new BadRequest('User already has portfolio with that ID');
-          badRequest.errors.userPortfolio = validation;
+      if(validation.portfolios) {
+        for (let portfolio of validation.portfolios) {
+          if (portfolio.id == data.portfolio.id) {
+            const badRequest = new BadRequest('User already has portfolio with that ID');
+            badRequest.errors.userPortfolio = validation;
 
-          const monitoringDesc = 'Tried to add portfolio, but user ' + userID + 'did already have a portfolio with id:' + data.portfolio.id;
-          saveMonitoringRecord.saveRecord(monitoringRecord, false, monitoringDesc);
-          return Promise.reject(badRequest);
+            const monitoringDesc = 'Tried to add portfolio, but user ' + userID + 'did already have a portfolio with id:' + data.portfolio.id;
+            saveMonitoringRecord.saveRecord(monitoringRecord, false, monitoringDesc);
+            return Promise.reject(badRequest);
+          }
         }
       }
       saveMonitoringRecord.saveRecord(monitoringRecord, true, 'Added portfolio ' + data.portfolio.id + ' to user ' + userID);
