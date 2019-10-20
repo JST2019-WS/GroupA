@@ -124,14 +124,14 @@ module.exports =
         return noId(monitoringRecord);
       if (isNaN(data.user.id))//case ignores submissions like 1e10000
         return idIsNan(monitoringRecord);
-      userID = data.user.id;
+      userID = data.user.id = data.user.id.toString();
       mongoUserID = createMongoID.createUserID(data.user.id); //mongoDB id used to identify user
     } else {
       if (!data.userId)
         return noId(monitoringRecord);
       if (isNaN(data.userId))//case ignores submissions like 1e10000
         return idIsNan(monitoringRecord);
-      userID = data.userId;
+      userID = data.userId = data.userId.toString();
       mongoUserID = createMongoID.createUserID(data.userId); //mongoDB id used to identify user
     }
 
