@@ -22,6 +22,8 @@ function checkAsset(asset) {
     isNaN(asset.quantity))
     return false;
 
+  asset.instrumentId = String(asset.instrumentId);
+
   return true;
 
 }
@@ -119,6 +121,7 @@ module.exports =
         return prepBadResponse(monitoringRecord, 'No portfolio id specified');
       if (isNaN(data.portfolio.id))
         return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
+      data.portfolio.id = String(data.portfolio.id);
       if (!data.portfolio.name)
         return prepBadResponse(monitoringRecord, 'Portfolio name not specified');
 
@@ -148,6 +151,7 @@ module.exports =
         return prepBadResponse(monitoringRecord, 'No portfolio id specified');
       if (isNaN(data.portfolioId))
         return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
+      data.portfolioId = String(data.portfolioId);
 
       const update = {$pull: {'portfolios': {'id': data.portfolioId}}};
       const validation = await Promise.resolve(dbService.get(mongoUserID, null));
@@ -170,6 +174,7 @@ module.exports =
         return prepBadResponse(monitoringRecord, 'No portfolio id specified');
       if (isNaN(data.portfolioId))
         return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
+      data.portfolioId = String(data.portfolioId);
       if (!data.asset)
         return prepBadResponse(monitoringRecord, 'Asset not specified');
       if (!checkAsset(data.asset))
@@ -214,10 +219,12 @@ module.exports =
         return prepBadResponse(monitoringRecord, 'No portfolio id specified');
       if (isNaN(data.portfolioId))
         return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
+      data.portfolioId = String(data.portfolioId);
       if (!data.assetId)
         return prepBadResponse(monitoringRecord, 'Asset id not specified');
       if (isNaN(data.assetId))
         return prepBadResponse(monitoringRecord, 'Asset id is not a number');
+      data.assetId = String(data.assetId)
 
       const params = {};
       params.query = {'portfolios.id': data.portfolioId};
@@ -262,6 +269,7 @@ module.exports =
         return prepBadResponse(monitoringRecord, 'No portfolio id specified');
       if (isNaN(data.portfolioId))
         return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
+      data.portfolioId = String(data.portfolioId);
 
       
       const params = {};
@@ -283,6 +291,7 @@ module.exports =
         return prepBadResponse(monitoringRecord, 'No portfolio id specified');
       if (isNaN(data.portfolioId))
         return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
+      data.portfolioId = String(data.portfolioId);
       if(!data.value)
         return prepBadResponse(monitoringRecord, 'No value specified');
       if(isNaN(data.value))
@@ -312,6 +321,7 @@ module.exports =
         return prepBadResponse(monitoringRecord, 'No portfolio id specified');
       if (isNaN(data.portfolioId))
         return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
+      data.portfolioId = String(data.portfolioId);
       if(!data.values)
         return prepBadResponse(monitoringRecord, 'No array of values specified');
       if(!Array.isArray(data.values))
