@@ -126,7 +126,7 @@ module.exports =
         return prepBadResponse(monitoringRecord, 'Portfolio name not specified');
 
       //sets the recommend array for the portfolio
-      setRecommend(data.portfolio)
+      setRecommend(data.portfolio);
 
       const update = {$addToSet: {'portfolios': data.portfolio}};
       const validation = await Promise.resolve(dbService.get(mongoUserID, null));
@@ -207,7 +207,7 @@ module.exports =
       const interParams = {};
       interParams.query = {'portfolios.id': data.portfolioId};
       const interUpdate = {$set: {'portfolios.$.recommend': new Array()}};
-      const resetRecommend = await Promise.resolve(dbService.patch(mongoUserID, interUpdate, interParams))
+      const resetRecommend = await Promise.resolve(dbService.patch(mongoUserID, interUpdate, interParams));
 
       const monitoringDesc = 'Added asset to portfolio ' + data.portfolioId + ' of user ' + userID + ' with instrumentId: ' + data.asset.instrumentId;
       saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
@@ -224,7 +224,7 @@ module.exports =
         return prepBadResponse(monitoringRecord, 'Asset id not specified');
       if (isNaN(data.assetId))
         return prepBadResponse(monitoringRecord, 'Asset id is not a number');
-      data.assetId = String(data.assetId)
+      data.assetId = String(data.assetId);
 
       const params = {};
       params.query = {'portfolios.id': data.portfolioId};
@@ -255,7 +255,7 @@ module.exports =
         const interParams = {};
         interParams.query = {'portfolios.id': data.portfolioId};
         const interUpdate = {$set: {'portfolios.$.recommend': new Array()}};
-        const resetRecommend = await Promise.resolve(dbService.patch(mongoUserID, interUpdate, interParams))
+        const resetRecommend = await Promise.resolve(dbService.patch(mongoUserID, interUpdate, interParams));
 
         const monitoringDesc = 'Removed asset from portfolio ' + data.portfolioId + ' of user ' + userID + ' with instrumentId: ' + data.assetId;
         saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
@@ -300,12 +300,12 @@ module.exports =
 
       const params = {};
       params.query = {'portfolios.id': data.portfolioId};
-      const update = {$push: {'portfolios.$.recommend': data.value}}
+      const update = {$push: {'portfolios.$.recommend': data.value}};
 
       
 
       //missing validations?
-      const result = await Promise.resolve(dbService.patch(mongoUserID, update, params))
+      const result = await Promise.resolve(dbService.patch(mongoUserID, update, params));
 
 
 
@@ -330,7 +330,7 @@ module.exports =
         if(isNaN(data.values[i]))
           return prepBadResponse(monitoringRecord, 'An element of values is not a number');
         else
-          data.values[i] = Number(data.values[i])
+          data.values[i] = Number(data.values[i]);
       }
 
 
@@ -339,7 +339,7 @@ module.exports =
       const update = {$set: {'portfolios.$.recommend': data.values}};
 
       //missing validations?
-      const result = await Promise.resolve(dbService.patch(mongoUserID, update, params))
+      const result = await Promise.resolve(dbService.patch(mongoUserID, update, params));
 
       const monitoringDesc = 'Set recommend of Portfolio ' + data.portfolioId + ' to ' + data.values + ' of user ' + userID;
       saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
@@ -349,7 +349,7 @@ module.exports =
 
     //returns user
     case 'getUser':{
-      return await Promise.resolve(dbService.get(mongoUserID,null))
+      return await Promise.resolve(dbService.get(mongoUserID,null));
     }
 
     default:
