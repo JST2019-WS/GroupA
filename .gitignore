@@ -109,3 +109,8 @@ $RECYCLE.BIN/
 # Others
 lib/
 data/
+
+# lu
+**/.env
+**/.devcontainer/
+**/.vscode/
