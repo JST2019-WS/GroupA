@@ -5,7 +5,7 @@ exports.Monitoring = class Monitoring extends Service {
     super(options);
 
     app.get('mongoClient').then(db => {
-      this.Model = db.collection('monitoring');
+      this.Model = db.collection(process.env.MONGODB_MONITORING_COLLECTION_NAME);
     });
   }
 };

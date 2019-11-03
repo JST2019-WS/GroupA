@@ -38,9 +38,9 @@ module.exports =
 
     const app = require('../../../app');
     const dbService = app.service('user-portfolioDB');
-
+    const securityKey = process.env.WSO_SECURITY_KEY;
     //catch: request contains correct security key
-    if (!data.securityKey || data.securityKey !== app.get('wsoSecurityKey')) {
+    if (!data.securityKey || data.securityKey !== securityKey) {
       const badRequest = new BadRequest('Security Key missing or wrong. Key: ' + data.securityKey);
       saveMonitoringRecord.saveRecord({'service': 'userPortfolio', 'action': (data.action ? data.action : 'none')}, false, 'Security Key missing or wrong. Key: ' + data.securityKey);
       return Promise.reject(badRequest);

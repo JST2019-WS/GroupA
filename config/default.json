@@ -5,12 +5,5 @@
   "paginate": {
     "default": 10,
     "max": 50
-  },
-    "mongodb": {
-    "url": "mongodb+srv://testUser:testpw@cluster0-zbjda.mongodb.net/test?retryWrites=true&w=majority",
-    "dbname": "javascriptDB"
-  },
-  "wsoSecurityKey" : "iem590af5e",
-  "frontendSecurityKey" : "r7wz95b4a5",
-  "internalSecurityKey" : "f94n66gs3r"
+  }
 }

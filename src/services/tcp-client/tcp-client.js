@@ -7,7 +7,7 @@ const WSO_STOCK_PRICE_TCP_PORT = process.env.WSO_STOCK_PRICE_TCP_PORT;
 
 const MONGODB_URL = process.env.MONGODB_URL;
 const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
-const MONGODB_COLLECTION_NAME = process.env.MONGODB_COLLECTION_NAME;
+const MONGODB_COLLECTION_NAME = process.env.MONGODB_ASSETS_COLLECTION_NAME;
 
 // https://stackoverflow.com/a/39957896
 module.exports = function connectTcpServer() {
