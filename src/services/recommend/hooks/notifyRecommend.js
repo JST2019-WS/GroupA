@@ -36,7 +36,7 @@ module.exports =
     const clickData = {
       'assetId' : data.assetId.toString(),
       'clickType' : clickType,
-      'date' : new Date().getTime()
+      'date' : new Date()
     };
     const update = { $push : {'clickedRecommendations' : clickData}};
     const result = await dbService.patch(id, update, null);
