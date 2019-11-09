@@ -9,6 +9,5 @@ module.exports = {
     record.description = description;
     console.log(record.description);
     monitoringService.create(record, null);
-
   }
 };
