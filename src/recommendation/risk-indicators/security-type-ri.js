@@ -2,7 +2,7 @@ const csv = require('csvtojson');
 
 // Risk percentage calculations are only based on the isin and should return a value between 0.0 and 100.0
 module.exports = {
-  riskPercentage : async (isin) => {
+  riskPercentage : async (isin, callback) => {
     let sec = null;
     const securities = await csv().fromFile('../data/all-securities.csv');
     for (let security of securities) {
@@ -16,6 +16,7 @@ module.exports = {
 
     let riskClass = null;
     let type = sec.name;
+    let unmatched = false;
 
     switch (type) {
       case 'STK':
@@ -68,12 +69,13 @@ module.exports = {
         break;
       default:
         console.log('Unmatched Security Type!');
-        return null;
+        unmatched = true;
     }
 
-    if (riskClass === -1) return null;
-
-    return riskClass * 16.667 + 16.667 / 2;
+    //return the value by invoking a callback
+    //the 1st param. is error, just keep it null
+    if (riskClass === -1 || unmatched == true) callback(null, null);
+    else callback(null, (riskClass * 16.667 + 16.667 / 2));
   }
 };
 

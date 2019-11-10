@@ -1,7 +1,9 @@
+const async = require('async');
+
 const er = require('./risk-indicators/economic-risk-ri');
 const st = require('./risk-indicators/security-type-ri');
 const tr = require('./risk-indicators/transaction-risk-ri');
-const vr = require('./risk-indicators/volatility-ri');
+const vr = require('./risk-indicators/volatility-pack/volatility-ri');
 
 const ER_FACTOR = 0.25;
 const ST_FACTOR = 0.25;
@@ -10,11 +12,32 @@ const VR_FACTOR = 0.25;
 
 // Risk percentage calculations are only based on the isin and should return a value between 0.0 and 100.0
 module.exports = {
-  aggregateRiskValue : (isin) => {
-    let er_part = er.riskPercentage(isin) * ER_FACTOR;
-    let st_part = st.riskPercentage(isin) * ST_FACTOR;
-    let tr_part = tr.riskPercentage(isin) * TR_FACTOR;
-    let vr_part = vr.riskPercentage(isin) * VR_FACTOR;
-    return er_part + st_part + tr_part + vr_part;
+  aggregateRiskValue : (isin, callback) => {
+    async.parallel({
+        er_value: function(cb){
+          er.riskPercentage(isin, cb);
+        },
+        st_value: function(cb){
+          st.riskPercentage(isin, cb);
+        },
+        tr_value: function(cb){
+          tr.riskPercentage(isin, cb);
+        },
+        vr_value: function(cb){
+          vr.riskPercentage(isin, cb);
+        },
+    }, function(err, values){
+        if(err) throw err;
+        //TODO: check if the returned value is null
+
+        //if all the returned values != null
+        let result = values.er_value * ER_FACTOR +
+                     values.st_value * ST_FACTOR +
+                     values.tr_value * TR_FACTOR +
+                     values.vr_value * VR_FACTOR;
+
+        //return the aggregated value by invoking a callback
+        callback(result);
+    });
   }
-};
+}

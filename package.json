@@ -44,7 +44,9 @@
     "mongodb": "^3.3.2",
     "mongodb-core": "^3.2.7",
     "serve-favicon": "^2.5.0",
-    "winston": "^3.2.1"
+    "winston": "^3.2.1",
+    "child_process": "^1.0.2",
+    "async": "^3.1.0"
   },
   "devDependencies": {
     "@feathersjs/cli": "^4.2.1",
