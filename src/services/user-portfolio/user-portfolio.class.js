@@ -1,10 +1,21 @@
-const { Service } = require('feathers-mongodb');
+/* eslint-disable no-unused-vars */
+const handleRequest = require('./hooks/handleRequest');
 
-exports.UserPortfolio = class UserPortfolio extends Service {
-  constructor(options, app) {
-    super(options);
-    app.get('mongoClient').then(db => {
-      this.Model = db.collection('user-portfolio');
-    });
+class Service {
+  constructor(options) {
+    this.options = options || {};
   }
+
+  async create(data, params) {
+    if (Array.isArray(data)) {
+      return Promise.all(data.map(current => this.create(current)));
+    }
+    return handleRequest(data, params);
+  }
+}
+
+module.exports = function (options) {
+  return new Service(options);
 };
+
+module.exports.Service = Service;

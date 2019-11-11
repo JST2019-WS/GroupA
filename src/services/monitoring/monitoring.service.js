@@ -1,13 +1,14 @@
 // Initializes the `monitoring` service on path `/monitoring`
-const { Monitoring } = require('./monitoring.class');
+const {Monitoring} = require('./monitoring.class');
 const hooks = require('./monitoring.hooks');
 
 module.exports = function (app) {
-  
+
   const paginate = app.get('paginate');
 
   const options = {
-    paginate
+    paginate,
+    multi: true
   };
 
   // Initialize our service with any options it requires

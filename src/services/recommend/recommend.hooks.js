@@ -1,5 +1,5 @@
 
-
+const saveMonitoringRecord = require('../../helper/saveMonitoringRecord');
 module.exports = {
   before: {
     all: [],
@@ -25,7 +25,12 @@ module.exports = {
     all: [],
     find: [],
     get: [],
-    create: [],
+    create: [
+      context => {
+        const monitoringRecord = {'service': 'recommend', 'action': 'notifyRecommend'};
+        saveMonitoringRecord.saveRecord(monitoringRecord, false, context.error.message);
+      }
+    ],
     update: [],
     patch: [],
     remove: []

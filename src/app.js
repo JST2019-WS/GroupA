@@ -15,6 +15,9 @@ const services = require('./services');
 const appHooks = require('./app.hooks');
 const channels = require('./channels');
 
+require('dotenv').config();
+const tcp_client = require('./services/tcp-client/tcp-client');
+
 const mongodb = require('./mongodb');
 
 const app = express(feathers());
@@ -50,6 +53,8 @@ app.use(express.notFound());
 app.use(express.errorHandler({logger}));
 
 app.hooks(appHooks);
+
+tcp_client();
 
 module.exports = app;
 

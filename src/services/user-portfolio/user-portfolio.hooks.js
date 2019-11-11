@@ -1,18 +1,12 @@
-const addUserValidation = require('./hooks/addUserValidation');
-const removeUserValidation = require('./hooks/removeUserValidation');
-const removeUserConfirmation = require('./hooks/removeUserConfirmation');
-const addStockValidation = require('./hooks/addStockValidation');
-const addStockConfirmation = require('./hooks/addStockConfirmation');
-
 module.exports = {
   before: {
     all: [],
     find: [],
     get: [],
-    create: [addUserValidation()],
+    create: [],
     update: [],
-    patch: [addStockValidation()],
-    remove: [removeUserValidation()]
+    patch: [],
+    remove: []
   },
 
   after: {
@@ -21,8 +15,8 @@ module.exports = {
     get: [],
     create: [],
     update: [],
-    patch: [addStockConfirmation()],
-    remove: [removeUserConfirmation()]
+    patch: [],
+    remove: []
   },
 
   error: {
