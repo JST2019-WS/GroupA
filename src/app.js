@@ -45,6 +45,7 @@ app.configure(mongodb);
 app.configure(middleware);
 // Set up our services (see `services/index.js`)
 app.configure(services);
+
 // Set up event channels (see channels.js)
 app.configure(channels);
 
