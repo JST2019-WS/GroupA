@@ -34,7 +34,7 @@ try:
 except:
     try:
         country = special_codes[country_code]
-        country_name = country.name
+        country_name = country
     except:
         country_name = 'NULL'
 
