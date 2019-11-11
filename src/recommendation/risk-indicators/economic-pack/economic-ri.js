@@ -10,7 +10,7 @@ module.exports = {
           }
           var beta = parseFloat(stdout);
           if(beta != -100){
-              result = beta;
+              result = 100 - beta;//inverting the risk
           }
           //return the value by invoking a callback
           //the 1st param. is error, just keep it null
