@@ -1,10 +1,13 @@
 const csv = require('csvtojson');
+const path = require('path');
+
+const myPath = path.join(__dirname, 'all-securities.csv');
 
 // Risk percentage calculations are only based on the isin and should return a value between 0.0 and 100.0
 module.exports = {
   riskPercentage : async (isin, callback) => {
     let sec = null;
-    const securities = await csv().fromFile('./all-securities.csv');
+    const securities = await csv().fromFile(myPath);
     for (let security of securities) {
       if (security.isin === isin) {
         sec = security;

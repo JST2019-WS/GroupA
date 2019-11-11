@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
+import os
 import sys
 import pycountry
 import csv
+
+currentPath = os.path.dirname(os.path.abspath(__file__))
+csvPath = os.path.join(currentPath, 'transaction_risk_countries.csv')
 
 # convert the ISIN into a ticker symbol
 isin = sys.argv[1]
@@ -41,7 +45,7 @@ except:
 # Retrieving the ratings for the countries from csv file
 # Scaling the rating [0 - 100], -100 being invalid
 risk_ratings = {}
-with open("transaction_risk_countries.csv") as ctrRating:
+with open(csvPath) as ctrRating:
     ratings = csv.reader(ctrRating)
     for count, row in enumerate(ratings):
         risk_ratings[row[1]] = round(int(row[2])*(100/7), 2)

@@ -1,10 +1,13 @@
 const { exec } = require('child_process');
+const path = require('path');
+
+const myPath = path.join(__dirname, 'betaExtractor.py');
 
 // Risk percentage calculations are only based on the isin and should return a value between 0.0 and 100.0
 module.exports = {
     riskPercentage(isin, callback) {
       var result = null;
-      exec('python betaExtractor.py '+isin, function(err, stdout, stderr){
+      exec('python '+myPath+' '+isin, function(err, stdout, stderr){
           if(err){
               console.log(err.stack);
           }
