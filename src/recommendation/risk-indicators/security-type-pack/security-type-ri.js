@@ -4,7 +4,7 @@ const csv = require('csvtojson');
 module.exports = {
   riskPercentage : async (isin, callback) => {
     let sec = null;
-    const securities = await csv().fromFile('../data/all-securities.csv');
+    const securities = await csv().fromFile('./all-securities.csv');
     for (let security of securities) {
       if (security.isin === isin) {
         sec = security;
