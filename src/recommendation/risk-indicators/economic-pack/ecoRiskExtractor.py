@@ -39,7 +39,7 @@ except:
         country_name = country
     except:
         country_name = 'NULL'
-
+        
 # Retrieving the ratings for the countries from csv file
 # Scaling the rating [0 - 100], -100 being invalid
 credit_ratings = {}
