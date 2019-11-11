@@ -1,8 +1,8 @@
 const async = require('async');
 
-const er = require('./risk-indicators/economic-risk-ri');
+const er = require('./risk-indicators/economic-pack/economic-ri');
 const st = require('./risk-indicators/security-type-pack/security-type-ri');
-const tr = require('./risk-indicators/transaction-risk-ri');
+const tr = require('./risk-indicators/transaction-pack/transaction-ri');
 const vr = require('./risk-indicators/volatility-pack/volatility-ri');
 
 const ER_FACTOR = 0.25;
@@ -40,4 +40,4 @@ module.exports = {
         callback(result);
     });
   }
-}
+};
