@@ -2,7 +2,7 @@ const hooks = require('feathers-hooks-common');
 const assetDBhooks = require('./hooks/assetDBhooks');
 module.exports = {
   before: {
-    all: [],
+    all: [hooks.disallow('external')],
     find: [],
     get: [],
     create: [],
