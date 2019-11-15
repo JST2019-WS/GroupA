@@ -42,11 +42,11 @@ module.exports = function connectTcpServer() {
         'isin',
         'quantity',
         'price',
-        'market',
+        'buy_or_sell',
         'date',
         'time',
-        'field7',
-        'field8'
+        'unknown_field',
+        'empty_field'
       ],
       // https://www.npmjs.com/package/csvtojson#built-in-parsers
       checkType: true,
@@ -54,11 +54,12 @@ module.exports = function connectTcpServer() {
         isin: 'string',
         quantity: 'number',
         price: 'number',
-        market: 'string',
+        buy_or_sell: 'string',
         date: 'string',
         time: 'string',
-        field7: 'string'
-      }
+        unknown_field: 'string'
+      },
+      includeColumns: /(isin|price|date|time)/
     })
       .fromString(plainText)
       .then(jsonObj => {
@@ -77,6 +78,8 @@ module.exports = function connectTcpServer() {
             for (const item of jsonObj) {
               let date_time = new Date(item.date + ' ' + item.time);
               item['date_time'] = date_time;
+              delete item['date'];
+              delete item['time'];
 
               let new_update_item = {
                 $set: item
@@ -101,10 +104,12 @@ module.exports = function connectTcpServer() {
                   // make sure, there's no duplicate and don't replace the newer
                   // data by older date
                   if (!has_same_isin) {
-                    db_collection
-                      .insertOne(item)
-                      .then(() => console.log('inserted ISIN: ' + item.isin))
-                      .catch(err => console.log('insert error: ' + err));
+                    // DONE NO INSERT JUST UPDATE
+                    console.log('ISIN not exist: ' + item.isin);
+                    // db_collection
+                    //   .insertOne(item)
+                    //   .then(() => console.log('inserted ISIN: ' + item.isin))
+                    //   .catch(err => console.log('insert error: ' + err));
                   } else {
                     db_collection
                       .countDocuments(filter_old_isin)
