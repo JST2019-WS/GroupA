@@ -14,17 +14,15 @@ function prepBadResponse(record, msg){
 
 
 function checkAsset(asset) {
-  if (!asset.instrumentId || !asset.isin || !asset.name ||
-    !asset.positionId || !asset.quantity || !asset.type)
-    return false;
+	//check for correct fields
+  	if (!asset.isin || !asset.quantity)
+    	return false;
 
-  if (isNaN(asset.instrumentId) || isNaN(asset.positionId) ||
-    isNaN(asset.quantity))
-    return false;
+	//check if quantity is a number
+  	if (isNaN(asset.quantity))
+    	return false;
 
-  asset.instrumentId = String(asset.instrumentId);
-
-  return true;
+	return true;
 
 }
 
@@ -38,6 +36,7 @@ module.exports =
 
     const app = require('../../../app');
     const dbService = app.service('user-portfolioDB');
+    const assetDbService = app.service('assetDB');//
     const securityKey = process.env.WSO_SECURITY_KEY;
     //catch: request contains correct security key
     if (!data.securityKey || data.securityKey !== securityKey) {
@@ -81,9 +80,9 @@ module.exports =
     //handle request based on action:
     switch (action) {
     case 'createUser': {
-      if (!data.user.name) {
-        const badRequest = new BadRequest('No user name specified');
-        saveMonitoringRecord.saveRecord(monitoringRecord, false, 'No user name specified');
+      if (!data.user.nick) {
+        const badRequest = new BadRequest('No user nick specified');
+        saveMonitoringRecord.saveRecord(monitoringRecord, false, 'No user nick specified');
         return Promise.reject(badRequest);
       }
       data._id = mongoUserID;
@@ -177,12 +176,34 @@ module.exports =
       data.portfolioId = String(data.portfolioId);
       if (!data.asset)
         return prepBadResponse(monitoringRecord, 'Asset not specified');
-      if (!checkAsset(data.asset))
+      //modify the asset to only include
+	  const asset = Object();
+	  asset.isin = String(data.asset.isin)
+	  asset.quantity = (data.asset.quantity)
+      if (!checkAsset(asset))
         return prepBadResponse(monitoringRecord, 'Asset not formatted correctly');
+
+      //check if the asset is found in the asset DB through isin
+      const query = {'isin': asset.isin}
+      // assetDbService.find({query}).then(console.log('ding!'))
+      // let result = await assetDbService.find({query})
+
+      try{
+      	const result = await assetDbService.find({query})
+      	//asset found in db
+      }
+      catch(error){
+      	//asset not found in db, add it
+      	assetDbService.create({
+      		isin: asset.isin,
+      		price: -1,
+      		date_time: new Date()
+      	})
+      }
 
       const params = {};
       params.query = {'portfolios.id': data.portfolioId};
-      const update = {$addToSet: {'portfolios.$.assets': data.asset}};
+      const update = {$addToSet: {'portfolios.$.assets': asset}};
       const validation = await Promise.resolve(dbService.get(mongoUserID, null));
 
       const validationPortfolio = await validation.portfolios.find(
@@ -193,10 +214,10 @@ module.exports =
       //test for duplicate assetIDs in the portfolio
       if (validationPortfolio.assets) {
         for (let i = 0; i < validationPortfolio.assets.length; i++) {
-          if (validationPortfolio.assets[i].instrumentId == data.asset.instrumentId) {
-            const badRequest = new BadRequest('Portfolio of User has already an Asset with that ID');
+          if (validationPortfolio.assets[i].isin == asset.isin) { //changed: instrumentId -> isin
+            const badRequest = new BadRequest('Portfolio of User has already an Asset with that isin');
             badRequest.errors.userPortfolio = validation;
-            const monitoringDesc = 'Tried to add asset to portfolio ' + data.portfolioId + ' of user ' + userID + ', but an asset already exists with id: ' + data.asset.instrumentId;
+            const monitoringDesc = 'Tried to add asset to portfolio ' + data.portfolioId + ' of user ' + userID + ', but an asset already exists with id: ' + asset.isin;
             saveMonitoringRecord.saveRecord(monitoringRecord, false, monitoringDesc);
             return Promise.reject(badRequest);
           }
@@ -209,7 +230,7 @@ module.exports =
       const interUpdate = {$set: {'portfolios.$.recommend': new Array()}};
       const resetRecommend = await Promise.resolve(dbService.patch(mongoUserID, interUpdate, interParams));
 
-      const monitoringDesc = 'Added asset to portfolio ' + data.portfolioId + ' of user ' + userID + ' with instrumentId: ' + data.asset.instrumentId;
+      const monitoringDesc = 'Added asset to portfolio ' + data.portfolioId + ' of user ' + userID + ' with isin: ' + asset.isin;
       saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
       return Promise.resolve(dbService.patch(mongoUserID, update, params));
     }
@@ -220,15 +241,13 @@ module.exports =
       if (isNaN(data.portfolioId))
         return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
       data.portfolioId = String(data.portfolioId);
-      if (!data.assetId)
-        return prepBadResponse(monitoringRecord, 'Asset id not specified');
-      if (isNaN(data.assetId))
-        return prepBadResponse(monitoringRecord, 'Asset id is not a number');
-      data.assetId = String(data.assetId);
+      if (!data.assetIsin)
+        return prepBadResponse(monitoringRecord, 'Asset isin not specified');
+      data.assetIsin = String(data.assetIsin);
 
       const params = {};
       params.query = {'portfolios.id': data.portfolioId};
-      const update = {$pull: {'portfolios.$.assets': {'instrumentId': data.assetId}}};
+      const update = {$pull: {'portfolios.$.assets': {'isin': data.assetIsin}}};
       const validation = await Promise.resolve(dbService.get(mongoUserID, null));
       const result = await Promise.resolve(dbService.patch(mongoUserID, update, params));
       const validationPortfolio = await validation.portfolios.find(
@@ -243,9 +262,9 @@ module.exports =
 
       //test if an asset was removed
       if (!validationPortfolio.assets || validationPortfolio.assets.length == resultPortfolio.assets.length) {
-        const badRequest = new BadRequest('User-Portfolio did not have Asset with that ID');
+        const badRequest = new BadRequest('User-Portfolio did not have Asset with that isin');
         badRequest.errors.userPortfolio = result;
-        const monitoringDesc = 'Tried to remove asset from portfolio ' + data.portfolioId + ' of user ' + userID + ', but no asset exists with id: ' + data.assetId;
+        const monitoringDesc = 'Tried to remove asset from portfolio ' + data.portfolioId + ' of user ' + userID + ', but no asset exists with isin: ' + data.assetIsin;
         saveMonitoringRecord.saveRecord(monitoringRecord, false, monitoringDesc);
 
         return Promise.reject(badRequest);
@@ -257,7 +276,7 @@ module.exports =
         const interUpdate = {$set: {'portfolios.$.recommend': new Array()}};
         const resetRecommend = await Promise.resolve(dbService.patch(mongoUserID, interUpdate, interParams));
 
-        const monitoringDesc = 'Removed asset from portfolio ' + data.portfolioId + ' of user ' + userID + ' with instrumentId: ' + data.assetId;
+        const monitoringDesc = 'Removed asset from portfolio ' + data.portfolioId + ' of user ' + userID + ' with isin: ' + data.assetIsin;
         saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
         return result;
       }
