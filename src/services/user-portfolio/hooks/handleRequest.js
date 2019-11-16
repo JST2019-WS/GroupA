@@ -11,11 +11,19 @@ function prepBadResponse(record, msg){
   return Promise.reject(badRequest);
 }
 
-
+function checkPortfolio(portfolio){
+	if (!portfolio.id)
+      return false;
+    if (isNaN(portfolio.id))
+      return false;
+    if (!portfolio.name)
+      return false;
+  	return true
+}
 
 function checkAsset(asset) {
   //check for correct fields
-  	if (!asset.isin || !asset.quantity)
+  	if (!asset.isin || !asset.quantity || !asset.name || !asset.type)
     	return false;
 
   //check if quantity is a number
@@ -31,12 +39,39 @@ function setRecommend(portfolio){
   portfolio.recommend = new Array();
 }
 
+//Helper method runs query to determine if an asset is present in the asset DB
+async function checkAssetDb(asset){
+	const app = require('../../../app');
+	const assetDbService = app.service('assetDB')
+	const query = {'isin': asset.isin};
+	try{
+      	const result = await assetDbService.find({query});
+      	//asset found in db
+     }
+    catch(error){
+  	//asset not found in db, add it
+  	assetDbService.create({
+  		isin: asset.isin,
+  		price: -1,
+  		name: asset.name,
+  		type: asset.type,
+  		date_time: new Date()
+  	});
+    }
+
+    const output = Object();
+    output.isin = String(asset.isin);
+    output.quantity = (asset.quantity);
+    output.type = String(asset.type);
+    output.name = String(asset.name);
+    return output;
+}
+
 module.exports =
   async (data, params) => {
 
     const app = require('../../../app');
     const dbService = app.service('user-portfolioDB');
-    const assetDbService = app.service('assetDB');//
     const securityKey = process.env.WSO_SECURITY_KEY;
     //catch: request contains correct security key
     if (!data.securityKey || data.securityKey !== securityKey) {
@@ -86,6 +121,25 @@ module.exports =
           return Promise.reject(badRequest);
         }
         data._id = mongoUserID;
+        //Run potential assets by the database
+        if(data.hasOwnProperty('portfolios')){
+
+        	for(i = 0; i < data.portfolios.length; i++){
+        		const portfolio = data.portfolios[i]
+        		if(!checkPortfolio(portfolio))
+        			return prepBadResponse('Portfolio not formatted correctly')
+        		if(portfolio.hasOwnProperty('assets')){
+        			for(j = 0; j < portfolio.assets.length; j++){
+        				const asset = portfolio.assets[j]
+        				if(!checkAsset(asset))
+        					return prepBadResponse(monitoringRecord, 'Asset not formatted correctly');
+        				const modified_asset = await checkAssetDb(asset);
+        				portfolio.assets[j] = modified_asset;
+        			}
+        		}
+        	}
+
+        }
         //Create correct createUserRequest
         const result = await dbService.create(data, null);
         saveMonitoringRecord.saveRecord(monitoringRecord, true, 'Created user-portfolio for user ' + userID);
@@ -114,15 +168,12 @@ module.exports =
       }
       case 'addPortfolio': {
 
-        if (!data.portfolio)
+      	if (!data.portfolio)
           return prepBadResponse(monitoringRecord, 'No portfolio specified');
-        if (!data.portfolio.id)
-          return prepBadResponse(monitoringRecord, 'No portfolio id specified');
-        if (isNaN(data.portfolio.id))
-          return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
+      	if(!checkPortfolio(data.portfolio))
+      		return prepBadResponse(monitoringRecord, 'Portfolio not formatted correctly');
+
         data.portfolio.id = String(data.portfolio.id);
-        if (!data.portfolio.name)
-          return prepBadResponse(monitoringRecord, 'Portfolio name not specified');
 
         //sets the recommend array for the portfolio
         setRecommend(data.portfolio);
@@ -176,30 +227,17 @@ module.exports =
         data.portfolioId = String(data.portfolioId);
         if (!data.asset)
           return prepBadResponse(monitoringRecord, 'Asset not specified');
-        //modify the asset to only include
-	  const asset = Object();
-	  asset.isin = String(data.asset.isin);
-	  asset.quantity = (data.asset.quantity);
-        if (!checkAsset(asset))
+      	if (!checkAsset(data.asset))
           return prepBadResponse(monitoringRecord, 'Asset not formatted correctly');
-
+     //    //modify the asset to only include
+	    // const asset = Object();
+	    // asset.isin = String(data.asset.isin);
+	    // asset.quantity = (data.asset.quantity);
+	    // asset.type = String(data.asset.type);
+	    // asset.name = String(data.asset.name);
+        
         //check if the asset is found in the asset DB through isin
-        const query = {'isin': asset.isin};
-        // assetDbService.find({query}).then(console.log('ding!'))
-        // let result = await assetDbService.find({query})
-
-        try{
-      	const result = await assetDbService.find({query});
-      	//asset found in db
-        }
-        catch(error){
-      	//asset not found in db, add it
-      	assetDbService.create({
-      		isin: asset.isin,
-      		price: -1,
-      		date_time: new Date()
-      	});
-        }
+        const asset = await checkAssetDb(asset);
 
         const params = {};
         params.query = {'portfolios.id': data.portfolioId};
