@@ -2,6 +2,13 @@ const {NotFound, GeneralError, BadRequest} = require('@feathersjs/errors');
 const saveMonitoringRecord = require('../../../helper/saveMonitoringRecord');
 
 module.exports = {
+
+  testSecurityKey: (context) => {
+    if(context.securityKey === null)
+      return Promise.reject(new BadRequest(('No securityKey field!')));
+    if(context.securityKey != process.env.WSO_SECURITY_KEY)
+      return Promise.reject(new BadRequest(('Wrong securityKey!')));
+  },
   //updates time field when price is updated
   updateTimeForPrice: (context) => {
     if (context.data.price !== undefined) {
