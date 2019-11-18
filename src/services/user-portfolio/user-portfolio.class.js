@@ -34,25 +34,17 @@ class Service {
 
     let success = false;
     let fs = require('fs');
-    fs.readFile('.env', 'utf8', function (err, fileData) {
-      success = err;
-      if (err) {
-        console.log(err);
-      } else {
-        let result = fileData.replace('WSO_SECURITY_KEY=\'' + data.oldKey + '\'', 'WSO_SECURITY_KEY=\'' + data.newKey + '\'');
-        fs.writeFile('.env', result, 'utf8', function (err) {
-          process.env.WSO_SECURITY_KEY = data.newKey;
-          success = err;
-          if (err) return console.log(err);
-        });
-      }
+
+    fs.writeFile('./Files/securityKey.txt', data.newKey, 'utf8', function (err) {
+      success = err === null;
+      if (err) return console.log(err);
+      process.env.WSO_SECURITY_KEY = data.newKey;
     });
 
-    if(success){
+    if (success) {
       saveMonitoringRecord.saveRecord(record, false, 'An Error occurred while saving the new Key!');
       return new BadRequest('An Error occurred while saving the new Key!');
-    }
-    else{
+    } else {
       saveMonitoringRecord.saveRecord(record, true, 'Updated securityKey!');
       return Promise.resolve('Updated securityKey!');
     }
