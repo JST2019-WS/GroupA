@@ -3,7 +3,7 @@ const userDBHooks = require('./hooks/userDBhooks');
 module.exports = {
   before: {
     all: [],
-    find: [],
+    find: [context => userDBHooks.testSecurityKey(context)],
     get: [hooks.disallow('external')],
     create: [hooks.disallow('external')],
     update: [hooks.disallow('external')],
