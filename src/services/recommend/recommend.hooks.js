@@ -25,12 +25,7 @@ module.exports = {
     all: [],
     find: [],
     get: [],
-    create: [
-      context => {
-        const monitoringRecord = {'service': 'recommend', 'action': 'notifyRecommend'};
-        saveMonitoringRecord.saveRecord(monitoringRecord, false, context.error.message);
-      }
-    ],
+    create: [],
     update: [],
     patch: [],
     remove: []
