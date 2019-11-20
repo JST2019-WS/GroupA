@@ -1,6 +1,5 @@
 /* eslint-disable no-unused-vars */
-const prepareRecommend = require('./hooks/prepareRecommend');
-const notifyRecommend = require('./hooks/notifyRecommend');
+const fetchRecommend = require('./hooks/fetchRecommend');
 
 class Service {
   constructor(options) {
@@ -8,12 +7,11 @@ class Service {
   }
 
   async create(data, params) {
-    // if (Array.isArray(data)) {
-    //   return Promise.all(data.map(current => this.create(current)));
-    // }
+    if (Array.isArray(data)) {
+      return Promise.all(data.map(current => this.create(current)));
+    }
 
-    // return Promise.resolve(data);
-    return notifyRecommend(data, params);
+    return fetchRecommend(data, params);
   }
 }
 
