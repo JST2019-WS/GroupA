@@ -5,11 +5,6 @@ const st = require('./risk-indicators/security-type-pack/security-type-ri');
 const tr = require('./risk-indicators/transaction-pack/transaction-ri');
 const vr = require('./risk-indicators/volatility-pack/volatility-ri');
 
-const ER_FACTOR = 0.25;
-const ST_FACTOR = 0.25;
-const TR_FACTOR = 0.25;
-const VR_FACTOR = 0.25;
-
 // Risk percentage calculations are only based on the isin and should return a value between 0.0 and 100.0
 module.exports = {
   aggregateRiskValue : (isin, callback) => {
@@ -28,16 +23,32 @@ module.exports = {
         },
     }, function(err, values){
         if(err) throw err;
-        //TODO: check if the returned value is null
 
-        //if all the returned values != null
-        let result = values.er_value * ER_FACTOR +
-                     values.st_value * ST_FACTOR +
-                     values.tr_value * TR_FACTOR +
-                     values.vr_value * VR_FACTOR;
-
-        //return the aggregated value by invoking a callback
-        callback(result);
+        let count = 0;
+        let total = 0;
+        if(values.er_value != null){
+          count++;
+          total += values.er_value;
+        }
+        if(values.st_value != null){
+          count++;
+          total += values.st_value;
+        }
+        if(values.tr_value != null){
+          count++;
+          total += values.tr_value;
+        }
+        if(values.vr_value != null){
+          count++;
+          total += values.vr_value;
+        }
+        //if all the returned values are null
+        if(count == 0) callback(-1);
+        else{
+          //return the aggregated value by invoking a callback
+          let result = total/count;
+          callback(result);
+        }
     });
   }
 };
