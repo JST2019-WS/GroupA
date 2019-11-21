@@ -77,7 +77,7 @@ module.exports = {
 
     //return the value by invoking a callback
     //the 1st param. is error, just keep it null
-    if (riskClass === -1 || unmatched == true) callback(null, null);
+    if (riskClass === -1 || unmatched === true) callback(null, null);
     else callback(null, (riskClass * 16.667 + 16.667 / 2));
   }
 };
