@@ -7,7 +7,7 @@ const myPath = path.join(__dirname, 'transRiskExtractor.py');
 module.exports = {
     riskPercentage(isin, callback) {
       var result = null;
-      exec('python '+myPath+' '+isin, function(err, stdout, stderr){
+      exec('python3 '+myPath+' '+isin, function(err, stdout, stderr){
           if(err){
               console.log(err.stack);
           }
