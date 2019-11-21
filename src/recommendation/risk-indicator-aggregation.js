@@ -46,6 +46,7 @@ module.exports = {
       map.set(tr_val, TR_FACTOR);
       map.set(vr_val, VR_FACTOR);
 
+
       if (not_null.length === 0) {
         callback(-1);
       } else {
@@ -55,7 +56,7 @@ module.exports = {
 
         // Every factor gets it's percentage of the fac_sum as weight.
         let result = 0.;
-        for (let e of not_null) result += (map.get(e) / fac_sum);
+        for (let e of not_null) result += (map.get(e) * e) / fac_sum;
 
 
         callback(result);
