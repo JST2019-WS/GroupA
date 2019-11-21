@@ -24,9 +24,9 @@ module.exports =
     }
     const id = createMongoID.createUserID(data.userId.toString());
 
-    if(!data.assetId){
-      const badRequest = new BadRequest('AssetId missing');
-      saveMonitoringRecord.saveRecord(monitoringRecord, false, 'AssetId missing');
+    if(!data.isin){
+      const badRequest = new BadRequest('Isin missing');
+      saveMonitoringRecord.saveRecord(monitoringRecord, false, 'Isin missing');
       return Promise.reject(badRequest);
     }
 
@@ -34,7 +34,7 @@ module.exports =
     const clickType = data.clickType ? data.clickType.toString() : '0';
     const dbService = app.service('user-portfolioDB'); //change this to portfolio service
     const clickData = {
-      'assetId' : data.assetId.toString(),
+      'isin' : data.isin.toString(),
       'clickType' : clickType,
       'date' : new Date()
     };
