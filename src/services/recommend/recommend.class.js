@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
-const prepareRecommend = require('./hooks/prepareRecommend');
+const {NotFound, GeneralError, BadRequest} = require('@feathersjs/errors');
+const fetchRecommend = require('./hooks/fetchRecommend');
 const notifyRecommend = require('./hooks/notifyRecommend');
 
 class Service {
@@ -8,12 +9,21 @@ class Service {
   }
 
   async create(data, params) {
-    // if (Array.isArray(data)) {
-    //   return Promise.all(data.map(current => this.create(current)));
-    // }
-
-    // return Promise.resolve(data);
-    return notifyRecommend(data, params);
+    if (Array.isArray(data)) {
+      return Promise.all(data.map(current => this.create(current)));
+    }
+    if(!data.action){
+      const badRequest = new BadRequest('No action specified');
+      return Promise.reject(badRequest);
+    }
+    if(data.action == 'notify')
+      return notifyRecommend(data,params);
+    if(data.action == 'fetch')
+      return fetchRecommend(data,params);
+    else{
+      const badRequest = new BadRequest('Unkown action');
+      return Promise.reject(badRequest);
+    }
   }
 }
 

@@ -1,3 +1,4 @@
+require('fs').readFile('./Files/securityKey.txt', 'utf8', function (err, securityKey) { if(err){console.log(err);} process.env.WSO_SECURITY_KEY = securityKey;});
 const path = require('path');
 const favicon = require('serve-favicon');
 const compress = require('compression');
