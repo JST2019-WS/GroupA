@@ -69,5 +69,21 @@ exports.AssetDB = class AssetDB extends Service {
     return Promise.resolve('Updated riskValue of asset ' + isin + ' to ' + newRiskValue);
   }
 
+  async getAssetsInRiskRange(minRisk, maxRisk) {
+
+    minRisk = Number(minRisk);
+    maxRisk = Number(maxRisk);
+    if(isNaN(minRisk))
+      return Promise.reject('MinRisk is not a number');
+    if(isNaN(maxRisk))
+      return Promise.reject('MaxRisk is not a number');
+
+    const query = {riskValue: { $gte :minRisk, $lte : maxRisk},  $select: [ 'isin' ]};
+    const res = await this._find({query});
+    if(res.total == 0){
+      return Promise.reject('No Assets found in riskRange');
+    }
+    return Promise.resolve(res.data);
+  }
 
 };
