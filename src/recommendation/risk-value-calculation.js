@@ -7,10 +7,16 @@ const myPath = path.join(__dirname, 'risk-indicators/security-type-pack/all-secu
 module.exports = {
   calculateRiskValues: async () => {
     const securities = await csv().fromFile(myPath);
+    const app = require('../app');
+    const assetDBService = app.service('assetDB');
     for (let sec of securities) {
       runner.aggregateRiskValue(sec.isin, res => {
-        console.log(res);
+        // Store res in db
+        assetDBService.setRiskValue(sec.isin, res);
       });
     }
   }
 };
+
+
+
