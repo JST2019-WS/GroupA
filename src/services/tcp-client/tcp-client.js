@@ -11,9 +11,9 @@ const MONGODB_COLLECTION_NAME = process.env.MONGODB_ASSETS_COLLECTION_NAME;
 
 // https://stackoverflow.com/a/39957896
 module.exports = function connectTcpServer() {
-  var client = new net.Socket();
+  var tcp_client = new net.Socket();
 
-  client.connect(
+  tcp_client.connect(
     WSO_STOCK_PRICE_TCP_PORT,
     WSO_STOCK_PRICE_TCP_HOST,
     function() {
@@ -27,9 +27,9 @@ module.exports = function connectTcpServer() {
     }
   );
 
-  client.on('error', function() {}); // need this line so it wont throw exception
+  tcp_client.on('error', function() {}); // need this line so it wont throw exception
 
-  client.on('data', data => {
+  tcp_client.on('data', data => {
     const plainText = iconvLite.decode(data, 'utf8');
 
     csv({
@@ -42,11 +42,11 @@ module.exports = function connectTcpServer() {
         'isin',
         'quantity',
         'price',
-        'market',
+        'side', // Market buy (B) / sell (S) / H for each heartbeat
         'date',
         'time',
-        'field7',
-        'field8'
+        'trade_id', //The TRADE-ID is unique, not sorted and not gapless
+        'empty_field'
       ],
       // https://www.npmjs.com/package/csvtojson#built-in-parsers
       checkType: true,
@@ -54,11 +54,12 @@ module.exports = function connectTcpServer() {
         isin: 'string',
         quantity: 'number',
         price: 'number',
-        market: 'string',
+        side: 'string',
         date: 'string',
         time: 'string',
-        field7: 'string'
-      }
+        trade_id: 'string'
+      },
+      includeColumns: /(isin|price|date|time)/
     })
       .fromString(plainText)
       .then(jsonObj => {
@@ -74,9 +75,13 @@ module.exports = function connectTcpServer() {
             if (err) throw err;
             var db = mongo_db.db(MONGODB_DB_NAME);
 
+            console.log('TCP-client connected to the mongoDB');
+
             for (const item of jsonObj) {
               let date_time = new Date(item.date + ' ' + item.time);
               item['date_time'] = date_time;
+              delete item['date'];
+              delete item['time'];
 
               let new_update_item = {
                 $set: item
@@ -101,10 +106,17 @@ module.exports = function connectTcpServer() {
                   // make sure, there's no duplicate and don't replace the newer
                   // data by older date
                   if (!has_same_isin) {
-                    db_collection
-                      .insertOne(item)
-                      .then(() => console.log('inserted ISIN: ' + item.isin))
-                      .catch(err => console.log('insert error: ' + err));
+                    // DONE NO INSERT JUST UPDATE
+                    let just_update_not_insert = false;
+
+                    if (just_update_not_insert) {
+                      console.log('ISIN not exist: ' + item.isin);
+                    } else {
+                      db_collection
+                        .insertOne(item)
+                        .then(() => console.log('inserted ISIN: ' + item.isin))
+                        .catch(err => console.log('insert error: ' + err));
+                    }
                   } else {
                     db_collection
                       .countDocuments(filter_old_isin)
@@ -134,8 +146,8 @@ module.exports = function connectTcpServer() {
   });
 
   // recursive call to make sure continuously try to connect to the tcp server
-  client.on('close', function() {
-    console.log('closed');
+  tcp_client.on('close', function() {
+    console.log('tcp-channel closed');
     setTimeout(() => {
       connectTcpServer();
     }, 1e3);
