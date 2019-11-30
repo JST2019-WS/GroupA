@@ -1,25 +1,23 @@
 # -*- coding: utf-8 -*-
 import os
-# import sys
 import pycountry
 import csv
 
 
 def risk_value(isin):
   currentPath = os.path.dirname(os.path.abspath(__file__))
-  csvPath = os.path.join(currentPath, 'countryRating.csv')
+  csvPath = os.path.join(currentPath, 'transaction_risk_countries.csv')
 
   # Hard coded values for missing ISINs
   special_codes = {
     'AN': 'Netherlands Antilles',
     'CS': 'Serbia',
     'EU': 'European Union',
-    'ZR': 'Congo'
+    'ZR': 'Democratic Republic of the Congo'
   }
 
   # Prevent different country name clashes for the same country
   country_name_new = {
-    'Czechia': 'Czech Republic',
     'Russian Federation': 'Russia',
     'Venezuela, Bolivarian Republic of': 'Venezuela',
     'Brunei Darussalam': 'Brunei',
@@ -44,21 +42,15 @@ def risk_value(isin):
 
   # Retrieving the ratings for the countries from csv file
   # Scaling the rating [0 - 100], -100 being invalid
-  credit_ratings = {}
+  risk_ratings = {}
   with open(csvPath) as ctrRating:
     ratings = csv.reader(ctrRating)
     for count, row in enumerate(ratings):
-      if count > 0:
-        credit_ratings[row[0]] = row[5]
-
-  rating = -100
+      risk_ratings[row[1]] = round(int(row[2]) * (100 / 7), 2)
+  rating = None
   try:
-    rating = credit_ratings[country_name]
+    rating = risk_ratings[country_name]
   except:
     pass
 
-  if rating != -100:
-    # Inverting the risk.
-    return 100.0 - float(rating)
-  else:
-    return None
+  return rating
