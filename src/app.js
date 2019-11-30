@@ -62,6 +62,8 @@ module.exports = app;
 
 //require('./readFile');
 
-// Uncomment below to calculate risk values
-//const rvc = require('./recommendation/risk-value-calculation');
-//rvc.calculateRiskValues();
+// Uncomment below to store risk values
+// setTimeout(() => {
+//   const rvc = require('./recommendation/risk-value-calculation');
+//   rvc.calculateRiskValues();
+// }, 2000);
