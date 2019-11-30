@@ -5,66 +5,63 @@ const createMongoID = require('../../../helper/createMongoID');
 const saveMonitoringRecord = require('../../../helper/saveMonitoringRecord');
 
 //Helper Method
-function prepBadResponse(record, msg){
+function prepBadResponse(record, msg) {
   const badRequest = new BadRequest(msg);
   saveMonitoringRecord.saveRecord(record, false, msg);
   return Promise.reject(badRequest);
 }
 
-function checkPortfolio(portfolio){
-	if (!portfolio.id)
-      return false;
-    if (isNaN(portfolio.id))
-      return false;
-    if (!portfolio.name)
-      return false;
-  	return true
+function checkPortfolio(portfolio) {
+  if (!portfolio.id)
+    return false;
+  if (isNaN(portfolio.id))
+    return false;
+  if (!portfolio.name)
+    return false;
+  return true;
 }
 
 function checkAsset(asset) {
   //check for correct fields
-  	if (!asset.isin || !asset.quantity || !asset.name || !asset.type)
-    	return false;
+  if (!asset.isin || !asset.quantity || !asset.name || !asset.type)
+    return false;
 
   //check if quantity is a number
-  	if (isNaN(asset.quantity))
-    	return false;
+  if (isNaN(asset.quantity))
+    return false;
 
   return true;
 
 }
 
 //Helper: adds recommend (int[]) / resets it to a portfolio
-function setRecommend(portfolio){
+function setRecommend(portfolio) {
   portfolio.recommend = new Array();
 }
 
 //Helper method runs query to determine if an asset is present in the asset DB
-async function checkAssetDb(asset){
-	const app = require('../../../app');
-	const assetDbService = app.service('assetDB')
-	const query = {'isin': asset.isin};
-	try{
-      	const result = await assetDbService.find({query});
-      	//asset found in db
-     }
-    catch(error){
-  	//asset not found in db, add it
-  	assetDbService.create({
-  		isin: asset.isin,
-  		price: -1,
-  		name: asset.name,
-  		type: asset.type,
-  		date_time: new Date()
-  	});
-    }
+async function checkAssetDb(asset) {
+  const app = require('../../../app');
+  const assetDbService = app.service('assetDB');
+  const query = {'isin': asset.isin, 'securityKey' : process.env.WSO_SECURITY_KEY};
+  try {
+    const result = await assetDbService.find({query});
+    //asset found in db
+  } catch (error) {
+    //asset not found in db, add it
+    await assetDbService.create({
+      isin: asset.isin,
+      price: -1,
+      name: asset.name,
+      type: asset.type,
+      date_time: new Date()
+    });
+  }
 
-    const output = Object();
-    output.isin = String(asset.isin);
-    output.quantity = (asset.quantity);
-    output.type = String(asset.type);
-    output.name = String(asset.name);
-    return output;
+  const output = Object();
+  output.isin = String(asset.isin);
+  output.quantity = (asset.quantity);
+  return output;
 }
 
 module.exports =
@@ -76,7 +73,10 @@ module.exports =
     //catch: request contains correct security key
     if (!data.securityKey || data.securityKey !== securityKey) {
       const badRequest = new BadRequest('Security Key missing or wrong. Key: ' + data.securityKey);
-      saveMonitoringRecord.saveRecord({'service': 'userPortfolio', 'action': (data.action ? data.action : 'none')}, false, 'Security Key missing or wrong. Key: ' + data.securityKey);
+      saveMonitoringRecord.saveRecord({
+        'service': 'userPortfolio',
+        'action': (data.action ? data.action : 'none')
+      }, false, 'Security Key missing or wrong. Key: ' + data.securityKey);
       return Promise.reject(badRequest);
     }
     delete data.securityKey;
@@ -122,22 +122,22 @@ module.exports =
         }
         data._id = mongoUserID;
         //Run potential assets by the database
-        if(data.hasOwnProperty('portfolios')){
+        if (data.hasOwnProperty('portfolios')) {
 
-        	for(i = 0; i < data.portfolios.length; i++){
-        		const portfolio = data.portfolios[i]
-        		if(!checkPortfolio(portfolio))
-        			return prepBadResponse('Portfolio not formatted correctly')
-        		if(portfolio.hasOwnProperty('assets')){
-        			for(j = 0; j < portfolio.assets.length; j++){
-        				const asset = portfolio.assets[j]
-        				if(!checkAsset(asset))
-        					return prepBadResponse(monitoringRecord, 'Asset not formatted correctly');
-        				const modified_asset = await checkAssetDb(asset);
-        				portfolio.assets[j] = modified_asset;
-        			}
-        		}
-        	}
+          for (i = 0; i < data.portfolios.length; i++) {
+            const portfolio = data.portfolios[i];
+            if (!checkPortfolio(portfolio))
+              return prepBadResponse('Portfolio not formatted correctly');
+            if (portfolio.hasOwnProperty('assets')) {
+              for (j = 0; j < portfolio.assets.length; j++) {
+                const asset = portfolio.assets[j];
+                if (!checkAsset(asset))
+                  return prepBadResponse(monitoringRecord, 'Asset not formatted correctly');
+                const modified_asset = await checkAssetDb(asset);
+                portfolio.assets[j] = modified_asset;
+              }
+            }
+          }
 
         }
         //Create correct createUserRequest
@@ -168,10 +168,10 @@ module.exports =
       }
       case 'addPortfolio': {
 
-      	if (!data.portfolio)
+        if (!data.portfolio)
           return prepBadResponse(monitoringRecord, 'No portfolio specified');
-      	if(!checkPortfolio(data.portfolio))
-      		return prepBadResponse(monitoringRecord, 'Portfolio not formatted correctly');
+        if (!checkPortfolio(data.portfolio))
+          return prepBadResponse(monitoringRecord, 'Portfolio not formatted correctly');
 
         data.portfolio.id = String(data.portfolio.id);
 
@@ -181,7 +181,7 @@ module.exports =
         const update = {$addToSet: {'portfolios': data.portfolio}};
         const validation = await Promise.resolve(dbService.get(mongoUserID, null));
         //Test for duplicate portfolioIds
-        if(validation.portfolios) {
+        if (validation.portfolios) {
           for (let portfolio of validation.portfolios) {
             if (portfolio.id == data.portfolio.id) {
               const badRequest = new BadRequest('User already has portfolio with that ID');
@@ -227,15 +227,15 @@ module.exports =
         data.portfolioId = String(data.portfolioId);
         if (!data.asset)
           return prepBadResponse(monitoringRecord, 'Asset not specified');
-      	if (!checkAsset(data.asset))
+        if (!checkAsset(data.asset))
           return prepBadResponse(monitoringRecord, 'Asset not formatted correctly');
-     //    //modify the asset to only include
-	    // const asset = Object();
-	    // asset.isin = String(data.asset.isin);
-	    // asset.quantity = (data.asset.quantity);
-	    // asset.type = String(data.asset.type);
-	    // asset.name = String(data.asset.name);
-        
+        //    //modify the asset to only include
+        // const asset = Object();
+        // asset.isin = String(data.asset.isin);
+        // asset.quantity = (data.asset.quantity);
+        // asset.type = String(data.asset.type);
+        // asset.name = String(data.asset.name);
+
         //check if the asset is found in the asset DB through isin
         const asset = await checkAssetDb(asset);
 
@@ -321,18 +321,18 @@ module.exports =
       }
 
       case'resetPortfolioRecommend': {
-      
+
         if (!data.portfolioId)
           return prepBadResponse(monitoringRecord, 'No portfolio id specified');
         if (isNaN(data.portfolioId))
           return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
         data.portfolioId = String(data.portfolioId);
 
-      
+
         const params = {};
         params.query = {'portfolios.id': data.portfolioId};
         const update = {$set: {'portfolios.$.recommend': new Array()}};
-      
+
         //missing validations?
         const result = await Promise.resolve(dbService.patch(mongoUserID, update, params));
 
@@ -342,16 +342,16 @@ module.exports =
 
       }
 
-      case'pushPortfolioRecommend':{
+      case'pushPortfolioRecommend': {
 
         if (!data.portfolioId)
           return prepBadResponse(monitoringRecord, 'No portfolio id specified');
         if (isNaN(data.portfolioId))
           return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
         data.portfolioId = String(data.portfolioId);
-        if(!data.value)
+        if (!data.value)
           return prepBadResponse(monitoringRecord, 'No value specified');
-        if(isNaN(data.value))
+        if (isNaN(data.value))
           return prepBadResponse(monitoringRecord, 'Value is not a number');
 
 
@@ -359,11 +359,9 @@ module.exports =
         params.query = {'portfolios.id': data.portfolioId};
         const update = {$push: {'portfolios.$.recommend': data.value}};
 
-      
 
         //missing validations?
         const result = await Promise.resolve(dbService.patch(mongoUserID, update, params));
-
 
 
         const monitoringDesc = 'Pushed ' + data.value + ' to recommend of Portfolio ' + data.portfolioId + ' of user ' + userID;
@@ -372,19 +370,19 @@ module.exports =
 
       }
 
-      case'setPortfolioRecommend':{
+      case'setPortfolioRecommend': {
 
         if (!data.portfolioId)
           return prepBadResponse(monitoringRecord, 'No portfolio id specified');
         if (isNaN(data.portfolioId))
           return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
         data.portfolioId = String(data.portfolioId);
-        if(!data.values)
+        if (!data.values)
           return prepBadResponse(monitoringRecord, 'No array of values specified');
-        if(!Array.isArray(data.values))
+        if (!Array.isArray(data.values))
           return prepBadResponse(monitoringRecord, 'Values is not an Array');
-        for(var i = 0; i < data.values.length; i++){
-          if(isNaN(data.values[i]))
+        for (var i = 0; i < data.values.length; i++) {
+          if (isNaN(data.values[i]))
             return prepBadResponse(monitoringRecord, 'An element of values is not a number');
           else
             data.values[i] = Number(data.values[i]);
@@ -405,8 +403,8 @@ module.exports =
       }
 
       //returns user
-      case 'getUser':{
-        return await Promise.resolve(dbService.get(mongoUserID,null));
+      case 'getUser': {
+        return await Promise.resolve(dbService.get(mongoUserID, null));
       }
 
       default:
