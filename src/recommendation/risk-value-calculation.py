@@ -9,7 +9,7 @@ import risk_indicators.transaction_pack.transaction_ri as tr
 ER_FACTOR = 0.20
 ST_FACTOR = 0.40
 TR_FACTOR = 0.20
-#VR_FACTOR = 0.10
+#VR_FACTOR = 0.20
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 csv_path = os.path.join(current_path, 'risk_indicators/security_type_pack/all-securities.csv')
