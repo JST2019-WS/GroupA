@@ -65,5 +65,6 @@ with open(csv_path) as csv_file:
 
 with open('risk-values.csv', 'w', newline='') as csv_file:
   filewriter = csv.writer(csv_file, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+  filewriter.writerow(['isin', 'risk_value'])
   for e in risk_dict.keys():
     filewriter.writerow([e, str(risk_dict.get(e))])
