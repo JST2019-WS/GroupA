@@ -27,6 +27,8 @@ module.exports =
 			return prepBadResponse(monitoringRecord, 'No portfolio ID specified');
 		if(isNaN(data.portfolioId))
 			return prepBadResponse(monitoringRecord, 'Portfolio ID is not a number');
+		if(isNaN(data.riskClass) || !Number.isInteger(data.riskClass) || data.riskClass < 1 || data.riskClass > 6)
+		  return prepBadResponse(monitoringRecord, 'Risk class not specified properly');
 		
 
 		data.userId = String(data.userId)
@@ -56,17 +58,10 @@ module.exports =
 			if(portfolioIndex == -1)
 				return prepBadResponse(monitoringRecord, 'User does not have the specified portfolio')
 			
-			//initiate request to ML here
-
-			//dummy implementation
-			const assetDbService = app.service('assetDB')
-			const output = Array()
-			const result =  await assetDbService.Model.aggregate([
-				{$sample: { size: 5 }}
-				 ]).toArray();
-			return result
-
-			//end of dummy
+			// Get recommendations.
+			rec = require('../../../recommendation/recommender');
+			const result = await rec.recommend(data.riskClass);
+			return result;
 		}
 		catch(error){
 			//not found
