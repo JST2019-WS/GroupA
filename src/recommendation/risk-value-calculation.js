@@ -12,7 +12,9 @@ module.exports = {
     const assetDBService = app.service('assetDB');
     for (let sec of securities) {
       // Store res in db
-      assetDBService.setRiskValue(sec.isin, sec.risk_value).catch(error => console.log(error));
+      assetDBService.setRiskValue(sec.isin, sec.risk_value)
+        .then(res => console.log(res))
+        .catch(error => console.log(error));
     }
   }
 };
