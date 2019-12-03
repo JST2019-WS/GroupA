@@ -178,6 +178,11 @@ module.exports =
         //sets the recommend array for the portfolio
         setRecommend(data.portfolio);
 
+        //set the risk value
+        if(!data.portfolio.risk || isNaN(data.portfolio.risk) || data.portfolio.risk < 0 || data.portfolio.risk > 1){
+          data.portfolio.risk = '-1'
+        }
+
         const update = {$addToSet: {'portfolios': data.portfolio}};
         const validation = await Promise.resolve(dbService.get(mongoUserID, null));
         //Test for duplicate portfolioIds
