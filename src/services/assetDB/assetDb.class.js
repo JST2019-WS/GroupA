@@ -78,7 +78,7 @@ exports.AssetDB = class AssetDB extends Service {
     if(isNaN(maxRisk))
       return Promise.reject('MaxRisk is not a number');
 
-    const query = {riskValue: { $gte :minRisk, $lte : maxRisk},  $select: [ 'isin' ]};
+    const query = {riskValue: { $gte :minRisk, $lte : maxRisk}};
     const res = await this._find({query});
     if(res.total == 0){
       return Promise.reject('No Assets found in riskRange');
