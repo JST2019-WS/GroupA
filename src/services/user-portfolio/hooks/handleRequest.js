@@ -402,6 +402,57 @@ module.exports =
 
       }
 
+
+      case'setPortfolioRisk':{
+        if (!data.portfolioId)
+          return prepBadResponse(monitoringRecord, 'No portfolio id specified');
+        if (isNaN(data.portfolioId))
+          return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
+        data.portfolioId = String(data.portfolioId);
+        if(!data.risk)
+          return prepBadResponse(monitoringRecord, 'Risk not specified');
+        if(isNaN(data.risk))
+          return prepBadResponse(monitoringRecord, 'Risk is not a number');
+        data.risk = parseFloat(data.risk);
+        if(data.risk < 0 || data.risk > 1)
+          return prepBadResponse(monitoringRecord, 'Risk has an illegal value');
+
+        const params = {};
+        params.query = {'portfolios.id' : data.portfolioId};
+        const update = {$set: {'portfolios.$.risk': data.risk}};
+
+        const result = await Promise.resolve(dbService.patch(mongoUserID, update, params));
+
+        const monitoringDesc = 'Set risk of Portfolio' + data.portfolioId + ' to ' + data.risk + ' of user ' + userID;
+        saveMonitoringRecord.saveRecord(monitoringRecord, true, monitoringDesc);
+        return result;
+      }
+
+      case'getPortfolioRisk':{
+        if (!data.portfolioId)
+          return prepBadResponse(monitoringRecord, 'No portfolio id specified');
+        if (isNaN(data.portfolioId))
+          return prepBadResponse(monitoringRecord, 'Portfolio id is not a number');
+        data.portfolioId = String(data.portfolioId);
+
+        const params = {};
+        params.query = {'portfolios.id' : data.portfolioId};
+
+        const result = await Promise.resolve(dbService.get(mongoUserID,null));
+
+        const portfolios = result.portfolios;
+
+        for(var i = 0 ; i < portfolios.length; i++){
+          if(portfolios[i].id == data.portfolioId)
+            if(!portfolios[i].risk)
+              return prepBadResponse(monitoringRecord, 'Portfolio does not have a risk value');
+            return portfolios[i].risk;
+        }
+
+        return prepBadResponse(monitoringRecord, 'User does not have the specified portfolio');
+      }
+
+
       //returns user
       case 'getUser': {
         return await Promise.resolve(dbService.get(mongoUserID, null));
