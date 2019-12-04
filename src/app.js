@@ -61,3 +61,9 @@ tcp_client();
 module.exports = app;
 
 //require('./readFile');
+
+// Uncomment below to store risk values
+// setTimeout(() => {
+//   const rvc = require('./recommendation/risk-value-calculation');
+//   rvc.calculateRiskValues();
+// }, 2000);
